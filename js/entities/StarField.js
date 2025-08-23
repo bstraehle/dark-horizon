@@ -1,0 +1,70 @@
+import { CONFIG } from '../constants.js';
+
+/**
+ * Provides static methods for initializing and rendering the animated star field background.
+ */
+export class StarField {
+    /**
+     * @typedef {Object} StarData
+     * @property {number} x
+     * @property {number} y
+     * @property {number} size
+     * @property {number} speed
+     * @property {number} brightness
+     */
+
+    /**
+     * Initializes the star field array.
+     * @param {number} width - Canvas width in logical pixels.
+     * @param {number} height - Canvas height in logical pixels.
+     * @returns {StarData[]} Array of star objects.
+     */
+    /**
+     * @param {number} width
+     * @param {number} height
+     * @param {import('../types.js').RNGLike} [rng]
+     */
+    static init(width, height, rng) {
+        const rand = rng || { nextFloat: Math.random.bind(Math) };
+        return Array.from({ length: CONFIG.GAME.STARFIELD_COUNT }, () => ({
+            x: rand.nextFloat() * width,
+            y: rand.nextFloat() * height,
+            size: rand.nextFloat() * 2 + 0.5,
+            speed: rand.nextFloat() * 30 + 6,
+            brightness: rand.nextFloat() * 0.5 + 0.5
+        }));
+    }
+
+    /**
+     * Draws the star field on the canvas.
+     * @param {CanvasRenderingContext2D} ctx - The canvas rendering context.
+     * @param {number} width - Canvas width in logical pixels.
+     * @param {number} height - Canvas height in logical pixels.
+     * @param {StarData[]} starField - Array of star objects.
+     * @param {number} timeSec - Elapsed time in seconds for twinkle.
+     * @param {boolean} [paused=false] - If true, star positions won't advance.
+     * @param {number} [dtSec=CONFIG.TIME.DEFAULT_DT] - Delta time in seconds for movement, ignored if paused.
+     * @param {{ nextFloat:()=>number }=} rng - Optional RNG-like with nextFloat()
+     */
+    static draw(ctx, width, height, starField, timeSec, paused = false, dtSec = CONFIG.TIME.DEFAULT_DT, rng = undefined) {
+        ctx.save();
+        ctx.fillStyle = CONFIG.COLORS.STAR.GRAD_IN;
+        starField.forEach(star => {
+            if (!paused) {
+                star.y += star.speed * dtSec;
+                if (star.y > height) {
+                    star.y = -5;
+                    star.x = (rng ? rng.nextFloat() : Math.random()) * width;
+                }
+            }
+            const twinkle = Math.sin(timeSec * 4 + star.x * 0.01) * 0.3 + 0.7;
+            ctx.save();
+            ctx.globalAlpha = star.brightness * twinkle;
+            ctx.shadowColor = CONFIG.COLORS.STAR.GRAD_IN;
+            ctx.shadowBlur = star.size * 2;
+            ctx.fillRect(star.x, star.y, star.size, star.size);
+            ctx.restore();
+        });
+        ctx.restore();
+    }
+}

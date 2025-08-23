@@ -1,0 +1,28 @@
+{
+  "name": "dark-horizon",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dark Horizon browser game",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild js/game.js --bundle --minify --sourcemap --target=es2018 --outfile=dist/bundle.js",
+    "postbuild": "powershell -NoProfile -Command \"New-Item -ItemType Directory -Force -Path dist > $null; Copy-Item -Force .\\favicon.png, .\\style.css .\\dist\\; (Get-Content .\\index.prod.html) -replace 'dist/bundle.js','bundle.js' | Set-Content .\\dist\\index.html\"",
+    "watch": "esbuild js/game.js --bundle --minify --sourcemap --target=es2018 --outfile=dist/bundle.js --watch",
+    "serve": "esbuild js/game.js --bundle --minify --sourcemap --target=es2018 --outfile=dist/bundle.js --serve=8000 --servedir=.",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint:ci": "eslint . --max-warnings=0",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "esbuild": "^0.23.0",
+    "@eslint/js": "^9.10.0",
+    "eslint": "^9.10.0",
+    "eslint-plugin-jsdoc": "^48.0.0",
+    "globals": "^15.8.0",
+  "vitest": "^2.0.5",
+  "typescript": "^5.5.4"
+  }
+}
