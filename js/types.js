@@ -28,11 +28,21 @@
  * @property {(obj:T)=>void} release
  */
 
-/** Lightweight event bus surface used by systems. */
+/** Event payloads by event name. */
+/** @typedef {{
+ *   bulletHitAsteroid: { asteroid: { x:number,y:number,width:number,height:number, getBounds?:()=>Rect }, bullet: { x:number,y:number,width:number,height:number, getBounds?:()=>Rect } },
+ *   playerHitAsteroid: { asteroid: { x:number,y:number,width:number,height:number, getBounds?:()=>Rect } },
+ *   collectedStar: { star: { x:number,y:number,width:number,height:number, getBounds?:()=>Rect } }
+ * }} GameEventMap */
 /** Event names emitted by the game. */
-/** @typedef {'bulletHitAsteroid' | 'playerHitAsteroid' | 'collectedStar'} GameEvent */
-/** Lightweight event bus surface used by systems. */
-/** @typedef {{ emit: (type:GameEvent, payload?:any)=>void }} EventBusish */
+/** @typedef {keyof GameEventMap} GameEvent */
+/** Lightweight event bus surface used by systems with typed payloads. */
+/** @typedef {{
+ *   emit: <K extends GameEvent>(type: K, payload: GameEventMap[K])=>void,
+ *   on: <K extends GameEvent>(type: K, handler: (payload: GameEventMap[K])=>void)=>()=>void,
+ *   off: <K extends GameEvent>(type: K, handler: (payload: GameEventMap[K])=>void)=>void,
+ *   clear: (type?: GameEvent)=>void
+ * }} EventBusish */
 
 // Re-export common classes purely for typing via JSDoc import()
 /** @typedef {import('./entities/Player.js').Player} Player */

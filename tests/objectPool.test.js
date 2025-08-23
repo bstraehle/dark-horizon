@@ -1,14 +1,19 @@
 // @ts-check
-import { describe, it, expect } from 'vitest';
-import { ObjectPool } from '../js/utils/ObjectPool.js';
+import { describe, it, expect } from "vitest";
+import { ObjectPool } from "../js/utils/ObjectPool.js";
 
-describe('ObjectPool', () => {
-  it('reuses released objects', () => {
+describe("ObjectPool", () => {
+  it("reuses released objects", () => {
     let created = 0;
-    const pool = new ObjectPool(() => ({ v: 0, id: ++created }), (obj, v) => { obj.v = v; });
+    const pool = new ObjectPool(
+      () => ({ v: 0, id: ++created }),
+      (obj, v) => {
+        obj.v = v;
+      }
+    );
 
-  const a = pool.acquire(1);
-  const _b = pool.acquire(2);
+    const a = pool.acquire(1);
+    const _b = pool.acquire(2);
     expect(created).toBe(2);
 
     pool.release(a);

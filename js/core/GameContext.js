@@ -1,4 +1,4 @@
-import { CONFIG } from '../constants.js';
+import { CONFIG } from "../constants.js";
 
 /**
  * @typedef {Object} ViewRect
@@ -17,7 +17,7 @@ import { CONFIG } from '../constants.js';
  * @property {number} timeSec - seconds
  * @property {number} dtSec - seconds
  * @property {boolean} isMobile
- * @property {{ nextFloat:()=>number, range?:(min:number,max:number)=>number }} rng
+ * @property {import('../types.js').RNGLike} rng
  * @property {{ nebulaConfigs?: any, starField: any }} background
  */
 
@@ -29,28 +29,28 @@ import { CONFIG } from '../constants.js';
  * @returns {GameContext}
  */
 export function getGameContext(game) {
-    return {
-        // Canvas & drawing
-        ctx: game.ctx,
-        view: game.view,
+  return {
+    // Canvas & drawing
+    ctx: game.ctx,
+    view: game.view,
 
-        // State & time
-        running: game.gameRunning,
-        paused: game.paused,
-        animTime: game.timeMs,
-        timeSec: game.timeSec,
+    // State & time
+    running: game.gameRunning,
+    paused: game.paused,
+    animTime: game.timeMs,
+    timeSec: game.timeSec,
     dtSec: game._lastDtSec || CONFIG.TIME.DEFAULT_DT,
 
-        // Platform
-        isMobile: game._isMobile,
+    // Platform
+    isMobile: game._isMobile,
 
-        // Deterministic randomness
-        rng: game.rng,
+    // Deterministic randomness
+    rng: game.rng,
 
-        // Background-related state used by BackgroundManager.draw
-        background: {
-            nebulaConfigs: game.nebulaConfigs,
-            starField: game.starField,
-        },
-    };
+    // Background-related state used by BackgroundManager.draw
+    background: {
+      nebulaConfigs: game.nebulaConfigs,
+      starField: game.starField,
+    },
+  };
 }

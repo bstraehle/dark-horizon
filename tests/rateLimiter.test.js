@@ -1,9 +1,9 @@
 // @ts-check
-import { describe, it, expect } from 'vitest';
-import { RateLimiter } from '../js/utils/RateLimiter.js';
+import { describe, it, expect } from "vitest";
+import { RateLimiter } from "../js/utils/RateLimiter.js";
 
-describe('RateLimiter', () => {
-  it('allows immediate call after reset and then blocks until interval', () => {
+describe("RateLimiter", () => {
+  it("allows immediate call after reset and then blocks until interval", () => {
     let now = 0;
     const rl = new RateLimiter(100, () => now);
 
@@ -22,7 +22,7 @@ describe('RateLimiter', () => {
     expect(count).toBe(2);
   });
 
-  it('reset() allows immediate next call', () => {
+  it("reset() allows immediate next call", () => {
     let now = 0;
     const rl = new RateLimiter(100, () => now);
     expect(rl.try()).toBe(true);

@@ -1,9 +1,9 @@
 // @ts-check
-import { describe, it, expect } from 'vitest';
-import { RNG } from '../js/utils/RNG.js';
+import { describe, it, expect } from "vitest";
+import { RNG } from "../js/utils/RNG.js";
 
-describe('RNG', () => {
-  it('produces deterministic sequence for same seed', () => {
+describe("RNG", () => {
+  it("produces deterministic sequence for same seed", () => {
     const a = new RNG(1234);
     const b = new RNG(1234);
     const seqA = Array.from({ length: 10 }, () => a.nextFloat());
@@ -11,7 +11,7 @@ describe('RNG', () => {
     expect(seqA).toEqual(seqB);
   });
 
-  it('range(min,max) returns within bounds', () => {
+  it("range(min,max) returns within bounds", () => {
     const r = new RNG(42);
     for (let i = 0; i < 100; i++) {
       const x = r.range(-5, 5);
@@ -20,7 +20,7 @@ describe('RNG', () => {
     }
   });
 
-  it('nextInt(max) is in [0, max)', () => {
+  it("nextInt(max) is in [0, max)", () => {
     const r = new RNG(7);
     for (let i = 0; i < 100; i++) {
       const n = r.nextInt(10);

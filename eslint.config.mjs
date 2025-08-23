@@ -2,6 +2,7 @@
 import globals from "globals";
 import js from "@eslint/js";
 import eslintPluginJSDoc from "eslint-plugin-jsdoc";
+import eslintConfigPrettier from "eslint-config-prettier";
 
 /**
  * Flat ESLint config for a browser JS project with JSDoc.
@@ -28,10 +29,10 @@ export default [
     },
     rules: {
       "no-console": "off",
-  "eqeqeq": ["error", "always"],
-  "consistent-return": "error",
-  "no-loop-func": "error",
-  "no-implicit-globals": "error",
+      eqeqeq: ["error", "always"],
+      "consistent-return": "error",
+      "no-loop-func": "error",
+      "no-implicit-globals": "error",
       "no-param-reassign": "off",
       "no-plusplus": "off",
       "no-bitwise": "off",
@@ -41,8 +42,8 @@ export default [
         {
           argsIgnorePattern: "^_",
           varsIgnorePattern: "^_",
-          caughtErrorsIgnorePattern: "^_"
-        }
+          caughtErrorsIgnorePattern: "^_",
+        },
       ],
       "jsdoc/check-alignment": "warn",
       "jsdoc/check-param-names": "warn",
@@ -56,4 +57,20 @@ export default [
       },
     },
   },
+  // Test files: enable vitest globals and Node environment
+  {
+    files: ["tests/**/*.js", "**/*.test.js"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.vitest,
+      },
+    },
+    rules: {
+      // tests often have unused helpers/params
+      "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+    },
+  },
+  // Turn off any ESLint rules that would conflict with Prettier formatting
+  eslintConfigPrettier,
 ];

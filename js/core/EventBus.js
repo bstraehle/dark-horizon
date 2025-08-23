@@ -4,20 +4,24 @@
 export class EventBus {
   /** Create a new EventBus. */
   constructor() {
-    /** @type {Map<string, Set<Function>>} */
+    /** @type {Map<import('../types.js').GameEvent, Set<Function>>} */
     this._map = new Map();
   }
 
   /**
    * Subscribe a handler to an event type.
    * @template T
-   * @param {string} type
+   * @param {import('../types.js').GameEvent} type
    * @param {(payload: T)=>void} handler
    * @returns {()=>void} Unsubscribe function
    */
+  /** @template {import('../types.js').GameEvent} K */
   on(type, handler) {
     let set = this._map.get(type);
-    if (!set) { set = new Set(); this._map.set(type, set); }
+    if (!set) {
+      set = new Set();
+      this._map.set(type, set);
+    }
     set.add(handler);
     return () => this.off(type, handler);
   }
@@ -25,10 +29,11 @@ export class EventBus {
   /**
    * Unsubscribe a handler from an event type.
    * @template T
-   * @param {string} type
+   * @param {import('../types.js').GameEvent} type
    * @param {(payload: T)=>void} handler
    * @returns {void}
    */
+  /** @template {import('../types.js').GameEvent} K */
   off(type, handler) {
     const set = this._map.get(type);
     if (!set) return;
@@ -39,25 +44,30 @@ export class EventBus {
   /**
    * Emit an event to all subscribed handlers.
    * @template T
-   * @param {string} type
+   * @param {import('../types.js').GameEvent} type
    * @param {T} payload
    * @returns {void}
    */
+  /** @template {import('../types.js').GameEvent} K */
   emit(type, payload) {
     const set = this._map.get(type);
     if (!set || set.size === 0) return;
     for (const fn of Array.from(set)) {
-      try { fn(payload); } catch (_) { /* ignore handler errors */ }
+      try {
+        fn(payload);
+      } catch (_) {
+        /* ignore handler errors */
+      }
     }
   }
 
   /**
    * Clear handlers for a specific type or all handlers when omitted.
-   * @param {string=} type
+   * @param {import('../types.js').GameEvent=} type
    * @returns {void}
    */
   clear(type) {
-    if (typeof type === 'string') {
+    if (typeof type === "string") {
       this._map.delete(type);
       return;
     }

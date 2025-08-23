@@ -1,4 +1,4 @@
-import { CONFIG } from '../constants.js';
+import { CONFIG } from "../constants.js";
 
 /** Move asteroids and release off-screen ones.
  * @param {import('../types.js').SystemsGame} game

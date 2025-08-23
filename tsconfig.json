@@ -11,7 +11,7 @@
     "strict": false,
     "skipLibCheck": true,
     "exactOptionalPropertyTypes": false,
-    "lib": ["ES2020", "DOM", "DOM.Iterable" ]
+    "lib": ["ES2020", "DOM", "DOM.Iterable"]
   },
   "include": ["js/**/*.js"],
   "exclude": ["node_modules", "dist"]

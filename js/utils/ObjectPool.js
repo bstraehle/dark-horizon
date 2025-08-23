@@ -3,88 +3,104 @@
  * @template T
  */
 export class ObjectPool {
-    /**
-     * @param {(...args:any[])=>T} createFn - Creates a new object when pool is empty.
-     * @param {(obj:T, ...args:any[])=>void} [resetFn] - Optional: Resets an object to a fresh state when acquired.
-     * @param {{ maxSize?: number, dispose?: (obj:T)=>void }} [opts] - Optional pool options.
-     */
-    constructor(createFn, resetFn, opts) {
-        this._create = createFn;
-        this._reset = resetFn || null;
-        /** @type {T[]} */
-        this._free = [];
-        this._maxSize = opts && typeof opts.maxSize === 'number' ? Math.max(0, opts.maxSize | 0) : Infinity;
-        this._dispose = opts && typeof opts.dispose === 'function' ? opts.dispose : null;
-        this._created = 0;
-    }
+  /**
+   * @param {(...args:any[])=>T} createFn - Creates a new object when pool is empty.
+   * @param {(obj:T, ...args:any[])=>void} [resetFn] - Optional: Resets an object to a fresh state when acquired.
+   * @param {{ maxSize?: number, dispose?: (obj:T)=>void }} [opts] - Optional pool options.
+   */
+  constructor(createFn, resetFn, opts) {
+    this._create = createFn;
+    this._reset = resetFn || null;
+    /** @type {T[]} */
+    this._free = [];
+    this._maxSize =
+      opts && typeof opts.maxSize === "number" ? Math.max(0, opts.maxSize | 0) : Infinity;
+    this._dispose = opts && typeof opts.dispose === "function" ? opts.dispose : null;
+    this._created = 0;
+  }
 
-    /**
-     * Acquire an object from the pool, creating one if necessary.
-     * @returns {T}
-     */
-    acquire(...args) {
-        const obj = this._free.length > 0 ? this._free.pop() : (this._created++, this._create(...args));
-        if (obj) {
-            // Prefer instance reset if available, otherwise fallback to pool-level reset
-            // @ts-ignore - duck-typed reset method
-            if (typeof obj.reset === 'function') {
-                // @ts-ignore
-                obj.reset(...args);
-            } else if (this._reset) {
-                this._reset(obj, ...args);
-            }
+  /**
+   * Acquire an object from the pool, creating one if necessary.
+   * @returns {T}
+   */
+  acquire(...args) {
+    const obj = this._free.length > 0 ? this._free.pop() : (this._created++, this._create(...args));
+    if (obj) {
+      // Prefer instance reset if available, otherwise fallback to pool-level reset
+      // @ts-ignore - duck-typed reset method
+      if (typeof obj.reset === "function") {
+        // @ts-ignore
+        obj.reset(...args);
+      } else if (this._reset) {
+        this._reset(obj, ...args);
+      }
+    }
+    return obj;
+  }
+
+  /**
+   * Return an object to the pool for reuse.
+   * @param {T} obj
+   */
+  release(obj) {
+    // Guard against null or undefined without using loose equality
+    if (obj === null || obj === undefined) return;
+    if (this._free.length < this._maxSize) {
+      this._free.push(obj);
+    } else if (this._dispose) {
+      // Drop overflow object and optionally dispose
+      try {
+        this._dispose(obj);
+      } catch {
+        /* noop */
+      }
+    }
+  }
+
+  /** Number of currently cached (free) objects. */
+  get freeCount() {
+    return this._free.length;
+  }
+
+  /** Total number of objects ever created by this pool. */
+  get createdCount() {
+    return this._created;
+  }
+
+  /**
+   * Pre-allocate and cache N objects in the pool for smoother first-use.
+   * Objects are created using the provided args but kept in the free list.
+   * @param {number} n
+   */
+  warmUp(n, ...args) {
+    const count = Math.max(0, n | 0);
+    // Respect maxSize: only create up to available capacity
+    const capacity = Math.max(
+      0,
+      Math.min(count, this._maxSize === Infinity ? count : this._maxSize - this._free.length)
+    );
+    for (let i = 0; i < capacity; i++) {
+      const obj = this._create(...args);
+      this._created++;
+      this._free.push(obj);
+    }
+  }
+
+  /**
+   * Clear all cached objects. If disposeAll is true and a disposer exists, dispose each.
+   * @param {boolean} [disposeAll]
+   */
+  clear(disposeAll = false) {
+    if (disposeAll && this._dispose) {
+      for (let i = 0; i < this._free.length; i++) {
+        const obj = this._free[i];
+        try {
+          this._dispose(obj);
+        } catch {
+          /* noop */
         }
-        return obj;
+      }
     }
-
-    /**
-     * Return an object to the pool for reuse.
-     * @param {T} obj
-     */
-    release(obj) {
-        // Guard against null or undefined without using loose equality
-        if (obj === null || obj === undefined) return;
-        if (this._free.length < this._maxSize) {
-            this._free.push(obj);
-        } else if (this._dispose) {
-            // Drop overflow object and optionally dispose
-            try { this._dispose(obj); } catch { /* noop */ }
-        }
-    }
-
-    /** Number of currently cached (free) objects. */
-    get freeCount() { return this._free.length; }
-
-    /** Total number of objects ever created by this pool. */
-    get createdCount() { return this._created; }
-
-    /**
-     * Pre-allocate and cache N objects in the pool for smoother first-use.
-     * Objects are created using the provided args but kept in the free list.
-     * @param {number} n
-     */
-    warmUp(n, ...args) {
-        const count = Math.max(0, n | 0);
-        // Respect maxSize: only create up to available capacity
-        const capacity = Math.max(0, Math.min(count, (this._maxSize === Infinity ? count : (this._maxSize - this._free.length))));
-        for (let i = 0; i < capacity; i++) {
-            const obj = this._create(...args);
-            this._created++;
-            this._free.push(obj);
-        }
-    }
-
-    /**
-     * Clear all cached objects. If disposeAll is true and a disposer exists, dispose each.
-     * @param {boolean} [disposeAll]
-     */
-    clear(disposeAll = false) {
-        if (disposeAll && this._dispose) {
-            for (let i = 0; i < this._free.length; i++) {
-                const obj = this._free[i];
-                try { this._dispose(obj); } catch { /* noop */ }
-            }
-        }
-        this._free.length = 0;
-    }
+    this._free.length = 0;
+  }
 }

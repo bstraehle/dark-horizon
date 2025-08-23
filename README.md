@@ -35,13 +35,13 @@ Or use the npm scripts (requires Node.js):
 - `python` not recognized on Windows → use `py -m http.server 8000`.
 - Port already in use → try another port, e.g. `py -m http.server 5500`.
 - High score not saving → Private/Incognito may block `localStorage`.
- - Strict CSP: `index.html`/`index.prod.html` use a strict Content-Security-Policy; inline scripts or external domains aren’t allowed.
+- Strict CSP: `index.html`/`index.prod.html` use a strict Content-Security-Policy; inline scripts or external domains aren’t allowed.
 
 ## How to play
 
 - Move: Arrow keys or WASD, or guide with mouse/touch
 - Shoot: Space, mouse click, or tap
- - Pause/Resume: Esc
+- Pause/Resume: Esc
 - Score: +10 per asteroid, +20 per star
 - Game over: Collide with an asteroid
 - Restart: Click “Launch Mission” or “Play Again”
@@ -52,7 +52,7 @@ Or use the npm scripts (requires Node.js):
 - Smooth animations with requestAnimationFrame
 - Starfield, nebulae, engine glow, explosions, and particle FX
 - High score persisted with `localStorage`
- - Accessibility touches: focus guards for overlays, ARIA labels, and restored focus on tab return
+- Accessibility touches: focus guards for overlays, ARIA labels, and restored focus on tab return
 
 ## Project structure
 
