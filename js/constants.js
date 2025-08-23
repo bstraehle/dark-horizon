@@ -188,8 +188,8 @@ export const CONFIG = deepFreeze({
     PLAYER: 25,
   },
   SPEEDS: {
-    ASTEROID_DESKTOP: 180,
-    ASTEROID_MOBILE: 120,
+    ASTEROID_DESKTOP: 200,
+    ASTEROID_MOBILE: 150,
     BULLET: 480,
     PLAYER: 480,
     STAR: 60,
