@@ -18,7 +18,8 @@ export default [
   {
     files: ["**/*.js"],
     languageOptions: {
-      ecmaVersion: 2021,
+      // Use latest to support class fields and other modern syntax
+      ecmaVersion: "latest",
       sourceType: "module",
       globals: {
         ...globals.browser,

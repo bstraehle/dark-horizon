@@ -45,6 +45,8 @@ import {
   updateStars,
 } from "./systems/UpdateSystems.js";
 import { EventBus } from "./core/EventBus.js";
+import { GameStateMachine } from "./core/GameStateMachine.js";
+import { EventHandlers } from "./systems/EventHandlers.js";
 /** @typedef {import('./types.js').GameState} GameState */
 
 /**
@@ -109,8 +111,8 @@ class DarkHorizon {
     this.rng = this.rng || new RNG(seed);
     this.fireLimiter = new RateLimiter(CONFIG.GAME.SHOT_COOLDOWN, () => this.timeMs);
 
-    this.gameRunning = false;
-    this.paused = false;
+    // State machine controls high-level flow
+    this.state = new GameStateMachine();
     this._pausedFrameRendered = false;
 
     this.fireLimiter.reset();
@@ -164,7 +166,8 @@ class DarkHorizon {
 
     this.bindEventHandlers();
     this.setupEventListeners();
-    this._setupEventSubscriptions();
+    // Register EventBus handlers centrally
+    this._unsubscribeEvents = EventHandlers.register(this);
 
     this.startBtn.focus();
 
@@ -176,55 +179,14 @@ class DarkHorizon {
         this.update(dtSec);
       },
       draw: () => this.draw(),
-      shouldUpdate: () => this.gameRunning && !this.paused,
+      shouldUpdate: () => this.state.isRunning(),
       stepMs: CONFIG.TIME.STEP_MS,
       maxSubSteps: CONFIG.TIME.MAX_SUB_STEPS,
     });
   }
 
-  /** Hook up gameplay side-effects to the EventBus. */
-  _setupEventSubscriptions() {
-    // Bullet hits asteroid
-    this.events.on("bulletHitAsteroid", ({ asteroid }) => {
-      this.score += CONFIG.GAME.ASTEROID_SCORE;
-      this.createExplosion(asteroid.x + asteroid.width / 2, asteroid.y + asteroid.height / 2);
-      this.updateScore();
-    });
-
-    // Player collides with asteroid -> game over
-    this.events.on("playerHitAsteroid", () => {
-      this.gameOver();
-    });
-
-    // Player collects star
-    this.events.on("collectedStar", () => {
-      this.score += CONFIG.GAME.STAR_SCORE;
-      this.updateScore();
-    });
-
-    // Visual burst for star collection (moved from CollisionManager)
-    this.events.on("collectedStar", ({ star }) => {
-      const rng = this.rng;
-      for (let p = 0; p < CONFIG.STAR.PARTICLE_BURST; p++) {
-        this.particles.push(
-          this.particlePool.acquire(
-            star.x + star.width / 2,
-            star.y + star.height / 2,
-            Math.cos((Math.PI * 2 * p) / CONFIG.STAR.PARTICLE_BURST) *
-              (rng.range(0, CONFIG.STAR.PARTICLE_BURST_SPEED_VAR) +
-                CONFIG.STAR.PARTICLE_BURST_SPEED_MIN),
-            Math.sin((Math.PI * 2 * p) / CONFIG.STAR.PARTICLE_BURST) *
-              (rng.range(0, CONFIG.STAR.PARTICLE_BURST_SPEED_VAR) +
-                CONFIG.STAR.PARTICLE_BURST_SPEED_MIN),
-            CONFIG.STAR.PARTICLE_LIFE,
-            CONFIG.STAR.PARTICLE_LIFE,
-            rng.range(0, CONFIG.STAR.PARTICLE_SIZE_VARIATION) + CONFIG.STAR.PARTICLE_SIZE_MIN,
-            CONFIG.COLORS.STAR.BASE
-          )
-        );
-      }
-    });
-  }
+  /** no-op placeholder to hint presence; handlers are registered in systems/EventHandlers */
+  _unsubscribeEvents = null;
 
   /**
    * Detect if the user is on a mobile device.
@@ -331,10 +293,12 @@ class DarkHorizon {
    * @returns {boolean}
    */
   shouldTogglePause(e) {
-    if (!this.gameRunning || e.repeat) return false;
+    if (!this.state.isRunning() && !this.state.isPaused()) return false;
+    if (e.repeat) return false;
     const isPauseKey =
       CONFIG.INPUT.PAUSE_CODES.includes(e.code) || CONFIG.INPUT.PAUSE_KEYS.includes(e.key);
-    const isConfirmWhilePaused = this.paused && CONFIG.INPUT.CONFIRM_CODES.includes(e.code);
+    const isConfirmWhilePaused =
+      this.state.isPaused() && CONFIG.INPUT.CONFIRM_CODES.includes(e.code);
     return isPauseKey || isConfirmWhilePaused;
   }
 
@@ -446,7 +410,7 @@ class DarkHorizon {
 
   /** Mouse down -> start continuous fire and fire immediately. */
   handleMouseDown() {
-    if (!this.gameRunning || this.paused) return;
+    if (!this.state.isRunning()) return;
     this.input.fireHeld = true;
     this.shoot();
   }
@@ -479,7 +443,7 @@ class DarkHorizon {
    */
   handleTouchStart(e) {
     e.preventDefault();
-    if (!this.gameRunning || this.paused) return;
+    if (!this.state.isRunning()) return;
     this.input.fireHeld = true;
     this.shoot();
   }
@@ -536,7 +500,7 @@ class DarkHorizon {
    * Fire a bullet if cooldown allows.
    */
   shoot() {
-    if (!this.gameRunning || this.paused) return;
+    if (!this.state.isRunning()) return;
     this.fireLimiter.try(() => {
       this.bullets.push(this.createBullet());
     });
@@ -559,8 +523,8 @@ class DarkHorizon {
       this._resizeScheduled = false;
       this.resizeCanvas();
       this.initBackground();
-      if (this.paused) this._pausedFrameRendered = false;
-      if (!this.gameRunning) {
+      if (this.state.isPaused()) this._pausedFrameRendered = false;
+      if (!this.state.isRunning()) {
         this.drawBackground();
       }
     });
@@ -570,7 +534,7 @@ class DarkHorizon {
    * Start or restart the game, reset scores and state.
    */
   startGame() {
-    this.gameRunning = true;
+    this.state.start();
     this.resetGameState();
     this.hideGameInfo();
     this.initBackground();
@@ -605,7 +569,8 @@ class DarkHorizon {
    * Toggle pause state.
    */
   togglePause() {
-    this.paused = !this.paused;
+    if (this.state.isPaused()) this.state.resume();
+    else if (this.state.isRunning()) this.state.pause();
     this._pausedFrameRendered = false;
   }
 
@@ -613,8 +578,7 @@ class DarkHorizon {
    * End the game.
    */
   gameOver() {
-    this.gameRunning = false;
-    this.paused = false;
+    this.state.end();
     this.updateHighScore();
     this.showGameOver();
     if (this.loop) this.loop.stop();
@@ -828,7 +792,7 @@ class DarkHorizon {
    * Draw all game objects and background for the current frame.
    */
   draw() {
-    if (this.paused) {
+    if (this.state.isPaused()) {
       if (!this._pausedFrameRendered) {
         this.drawFrame();
         this._pausedFrameRendered = true;

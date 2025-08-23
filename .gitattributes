@@ -1,0 +1,18 @@
+# Normalize text files to LF in repo; Git will convert to CRLF in working dir on Windows if configured
+* text=auto eol=lf
+
+# Keep Windows scripts with CRLF to avoid execution issues
+*.bat eol=crlf
+*.cmd eol=crlf
+*.ps1 eol=crlf
+
+# Images/binaries
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.svg text eol=lf
+*.ico binary
+
+# Map files as text
+*.map text eol=lf

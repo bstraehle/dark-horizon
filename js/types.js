@@ -57,6 +57,7 @@
 /** @typedef {import('./core/EventBus.js').EventBus} EventBus */
 /** @typedef {import('./utils/RateLimiter.js').RateLimiter} RateLimiter */
 /** @typedef {import('./core/GameLoop.js').GameLoop} GameLoop */
+/** @typedef {import('./core/GameStateMachine.js').GameStateMachine} GameStateMachine */
 
 /** Pre-rendered sprite atlas surfaces used by RenderManager. */
 /** @typedef {{ bullet: HTMLCanvasElement, bulletTrail: number, star: HTMLCanvasElement, starBaseSize: number }} SpriteAtlas */
@@ -80,14 +81,13 @@
  * @property {number} score
  * @property {InputState} input
  * @property {EventBus} events
+ * @property {GameStateMachine} state
  * @property {boolean} _isMobile
  * @property {number} asteroidSpeed
  * @property {number} bulletSpeed
  * @property {number} starSpeed
  * @property {RNGLike} rng
  * @property {RateLimiter} fireLimiter
- * @property {boolean} gameRunning
- * @property {boolean} paused
  * @property {boolean} [_pausedFrameRendered]
  * @property {number} timeMs
  * @property {number} timeSec
@@ -120,7 +120,7 @@
  * @property {ObjectPoolOf<Explosion>} explosionPool
  * @property {EngineTrail} engineTrail
  * @property {RNGLike} rng
- * @property {boolean} gameRunning
+ * @property {GameStateMachine=} state
  * @property {Asteroid[]} asteroids
  * @property {Bullet[]} bullets
  * @property {Explosion[]} explosions

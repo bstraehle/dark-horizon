@@ -6,11 +6,11 @@ import { CONFIG, clamp } from "../constants.js";
 export class ViewManager {
   /**
    * Resize canvas and update view metrics and player spawn position.
-   * @param {{ canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, view: {width:number,height:number,dpr:number}, player: { x:number,y:number,width:number,height:number}, canvasRect?: DOMRect, gameRunning?: boolean }} game - The game instance.
+   * @param {{ canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, view: {width:number,height:number,dpr:number}, player: { x:number,y:number,width:number,height:number}, canvasRect?: DOMRect, state: import('../core/GameStateMachine.js').GameStateMachine }} game - The game instance.
    */
   static resize(game) {
     const { canvas, ctx, view, player } = game;
-    const wasRunning = !!game.gameRunning;
+    const wasRunning = game.state.isRunning();
     const prevW = view.width || 0;
     const prevH = view.height || 0;
     let relCenterX = 0.5;

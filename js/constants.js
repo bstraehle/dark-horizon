@@ -124,11 +124,11 @@ export const CONFIG = deepFreeze({
   },
   GAME: {
     ASTEROID_SCORE: 10,
-    ASTEROID_SPAWN_RATE: 1.2,
+    ASTEROID_SPAWN_RATE: 2.0,
     SHOT_COOLDOWN: 200,
     STARFIELD_COUNT: 150,
     STAR_SCORE: 20,
-    STAR_SPAWN_RATE: 0.6,
+    STAR_SPAWN_RATE: 1.0,
   },
   INPUT: {
     CONFIRM_CODES: ["Enter", "Space"].sort(),

@@ -35,7 +35,7 @@ export function updateBullets(game, dtSec = CONFIG.TIME.DEFAULT_DT) {
  * @param {number} [dtSec]
  */
 export function updateEngineTrail(game, dtSec = CONFIG.TIME.DEFAULT_DT) {
-  if (game.gameRunning) {
+  if (game.state && typeof game.state.isRunning === "function" && game.state.isRunning()) {
     game.engineTrail.add(game.player, game.rng);
   }
   game.engineTrail.update(dtSec);

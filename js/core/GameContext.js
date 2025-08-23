@@ -35,8 +35,8 @@ export function getGameContext(game) {
     view: game.view,
 
     // State & time
-    running: game.gameRunning,
-    paused: game.paused,
+    running: game.state.isRunning(),
+    paused: game.state.isPaused(),
     animTime: game.timeMs,
     timeSec: game.timeSec,
     dtSec: game._lastDtSec || CONFIG.TIME.DEFAULT_DT,

@@ -1,6 +1,7 @@
 // @ts-check
 import { describe, it, expect, beforeEach, afterAll, vi } from "vitest";
 import { ViewManager } from "../js/managers/ViewManager.js";
+import { GameStateMachine } from "../js/core/GameStateMachine.js";
 import { CONFIG } from "../js/constants.js";
 
 // Minimal canvas/ctx mocks
@@ -29,7 +30,7 @@ function makeGame() {
     ctx,
     view: { width: 0, height: 0, dpr: 1 },
     player: { x: 0, y: 0, width: CONFIG.SIZES.PLAYER, height: CONFIG.SIZES.PLAYER },
-    gameRunning: false,
+    state: new GameStateMachine(),
   };
 }
 
@@ -85,7 +86,7 @@ describe("ViewManager.resize", () => {
     const game = makeGame();
     ViewManager.resize(game);
     // pretend running and move player near right, above bottom
-    game.gameRunning = true;
+    game.state.start();
     game.player.x = game.view.width - game.player.width - 10;
     game.player.y = game.view.height - game.player.height - 50;
 
