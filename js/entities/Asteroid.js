@@ -57,6 +57,9 @@ export class Asteroid {
     const radius = this.width / 2;
     // Use a slightly darker rock body for indestructible; blue shield/pulse are added below
     const palette = this.isIndestructible ? CONFIG.COLORS.ASTEROID_DARK : CONFIG.COLORS.ASTEROID;
+    // Resolve shield color once (used for impact ring only)
+    const shieldColor =
+      (CONFIG.COLORS.ASTEROID_HARD && CONFIG.COLORS.ASTEROID_HARD.SHIELD) || "#7fc3ff";
     const asteroidGradient = ctx.createRadialGradient(
       centerX - radius * 0.3,
       centerY - radius * 0.3,
@@ -82,47 +85,20 @@ export class Asteroid {
     ctx.lineWidth = this.isIndestructible ? 3 : 2;
     ctx.stroke();
 
-    // Energy shield: soft outer glow + hit pulse (no inner ring)
-    if (this.isIndestructible) {
-      // Outer glow halo
+    // Indestructible asteroid impact effect: show blue ring only on bullet impact
+    if (this.isIndestructible && this._shieldFlash > 0) {
+      const t = Math.max(0, Math.min(1, this._shieldFlash / CONFIG.ASTEROID.SHIELD_FLASH_TIME));
       ctx.save();
-      const glowR = Math.max(radius + 3, radius * 1.15);
-      const grad = ctx.createRadialGradient(
-        centerX,
-        centerY,
-        radius * 0.9,
-        centerX,
-        centerY,
-        glowR
-      );
-      const shield =
-        (CONFIG.COLORS.ASTEROID_HARD && CONFIG.COLORS.ASTEROID_HARD.SHIELD) || "#7fc3ff";
-      const flashAlpha = this._shieldFlash > 0 ? CONFIG.ASTEROID.SHIELD_FLASH_EXTRA_ALPHA : 0;
-      grad.addColorStop(0, "rgba(0,0,0,0)");
-      grad.addColorStop(0.7, shield.replace(/#/, "#"));
-      grad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.globalAlpha = 0.6 + flashAlpha;
-      ctx.fillStyle = grad;
+      ctx.strokeStyle = shieldColor;
+      ctx.lineWidth = 2 + 2 * t;
+      ctx.shadowColor = shieldColor;
+      ctx.shadowBlur = 10 + 10 * t;
+      ctx.globalAlpha = 0.6 + 0.6 * t;
+      const ringR = radius * (1.05 + 0.05 * t);
       ctx.beginPath();
-      ctx.arc(centerX, centerY, glowR, 0, PI2);
-      ctx.fill();
+      ctx.arc(centerX, centerY, ringR, 0, PI2);
+      ctx.stroke();
       ctx.restore();
-
-      // Hit flash ring: bright stroked ring with shadow that pulses during flash window
-      if (this._shieldFlash > 0) {
-        const t = Math.max(0, Math.min(1, this._shieldFlash / CONFIG.ASTEROID.SHIELD_FLASH_TIME));
-        ctx.save();
-        ctx.strokeStyle = shield;
-        ctx.lineWidth = 2 + 2 * t;
-        ctx.shadowColor = shield;
-        ctx.shadowBlur = 10 + 10 * t;
-        ctx.globalAlpha = 0.6 + 0.6 * t;
-        const ringR = radius * (1.05 + 0.05 * t);
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, ringR, 0, PI2);
-        ctx.stroke();
-        ctx.restore();
-      }
     }
     ctx.restore();
   }

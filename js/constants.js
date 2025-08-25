@@ -38,11 +38,11 @@ const COLORS = deepFreeze({
   },
   // Slightly darker than regular asteroid, used when shielded to keep core natural
   ASTEROID_DARK: {
-    CRATER: "#3c3c3c",
-    GRAD_IN: "#4c4c4c",
-    GRAD_MID: "#2f2f2f",
-    GRAD_OUT: "#1a1a1a",
-    OUTLINE: "#3a3a3a",
+    CRATER: "#343434",
+    GRAD_IN: "#444444",
+    GRAD_MID: "#282828",
+    GRAD_OUT: "#141414",
+    OUTLINE: "#323232",
     SHIELD: "#4da3ff",
   },
   BACKGROUND: {
