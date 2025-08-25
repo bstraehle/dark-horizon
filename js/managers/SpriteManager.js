@@ -35,7 +35,7 @@ export class SpriteManager {
       c.restore();
     }
 
-    // Star sprite (square)
+    // Star sprite (square) - yellow
     const starBaseSize = 64;
     const starCanvas = document.createElement("canvas");
     starCanvas.width = starBaseSize;
@@ -68,10 +68,41 @@ export class SpriteManager {
       c.fill();
     }
 
+    // Red star sprite
+    const starRedCanvas = document.createElement("canvas");
+    starRedCanvas.width = starBaseSize;
+    starRedCanvas.height = starBaseSize;
+    {
+      const c = starRedCanvas.getContext("2d");
+      const cx = starBaseSize / 2;
+      const cy = starBaseSize / 2;
+      const size = starBaseSize * 0.45;
+      const grad = c.createRadialGradient(cx, cy, 0, cx, cy, size);
+      grad.addColorStop(0, CONFIG.COLORS.STAR_RED.GRAD_IN);
+      grad.addColorStop(0.3, CONFIG.COLORS.STAR_RED.GRAD_MID);
+      grad.addColorStop(1, CONFIG.COLORS.STAR_RED.GRAD_OUT);
+      c.fillStyle = grad;
+      c.beginPath();
+      for (let i = 0; i < 5; i++) {
+        const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+        const x1 = cx + size * Math.cos(angle);
+        const y1 = cy + size * Math.sin(angle);
+        if (i === 0) c.moveTo(x1, y1);
+        else c.lineTo(x1, y1);
+        const innerAngle = angle + Math.PI / 5;
+        const x2 = cx + size * 0.4 * Math.cos(innerAngle);
+        const y2 = cy + size * 0.4 * Math.sin(innerAngle);
+        c.lineTo(x2, y2);
+      }
+      c.closePath();
+      c.fill();
+    }
+
     return {
       bullet: bulletCanvas,
       bulletTrail: trail,
       star: starCanvas,
+      starRed: starRedCanvas,
       starBaseSize,
     };
   }

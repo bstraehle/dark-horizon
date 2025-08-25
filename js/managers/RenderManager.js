@@ -48,10 +48,11 @@ export class RenderManager {
    */
   static drawCollectibleStars(ctx, stars, timeSec = 0, sprites) {
     const starSpr = sprites && sprites.star;
+    const starRedSpr = sprites && /** @type {any} */ (sprites).starRed;
     const base = sprites && sprites.starBaseSize;
     if (starSpr && base) {
       for (let i = 0; i < stars.length; i++) {
-        const s = stars[i];
+        const s = /** @type {any} */ (stars[i]);
         const baseSize = Math.max(1, Math.min(s.width, s.height));
         let dw = baseSize,
           dh = baseSize;
@@ -64,7 +65,8 @@ export class RenderManager {
         }
         const cx = s.x + s.width / 2;
         const cy = s.y + s.height / 2;
-        ctx.drawImage(starSpr, 0, 0, base, base, cx - dw / 2, cy - dh / 2, dw, dh);
+        const spr = s.isRed && starRedSpr ? starRedSpr : starSpr;
+        ctx.drawImage(spr, 0, 0, base, base, cx - dw / 2, cy - dh / 2, dw, dh);
       }
     } else {
       for (let i = 0; i < stars.length; i++) {

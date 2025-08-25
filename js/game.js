@@ -135,6 +135,8 @@ class DarkHorizon {
     this.explosions = [];
     this.particles = [];
     this.stars = [];
+    /** Track consecutive yellow stars spawned to insert red bonus ones */
+    this._yellowStarCount = 0;
 
     this.bulletPool = new ObjectPool(
       (x, y, w, h, speed) => new Bullet(x, y, w, h, speed),
@@ -758,7 +760,7 @@ class DarkHorizon {
 
       // Stars
       const sSize = CONFIG.STAR.MIN_SIZE + CONFIG.STAR.SIZE_VARIATION * 0.5;
-      this.starPool.warmUp(32, 0, CONFIG.STAR.SPAWN_Y, sSize, sSize, this.starSpeed);
+      this.starPool.warmUp(32, 0, CONFIG.STAR.SPAWN_Y, sSize, sSize, this.starSpeed, false);
 
       // Particles (explosion-like)
       this.particlePool.warmUp(

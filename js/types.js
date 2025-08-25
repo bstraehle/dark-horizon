@@ -32,7 +32,7 @@
 /** @typedef {{
  *   bulletHitAsteroid: { asteroid: { x:number,y:number,width:number,height:number, getBounds?:()=>Rect }, bullet: { x:number,y:number,width:number,height:number, getBounds?:()=>Rect } },
  *   playerHitAsteroid: { asteroid: { x:number,y:number,width:number,height:number, getBounds?:()=>Rect } },
- *   collectedStar: { star: { x:number,y:number,width:number,height:number, getBounds?:()=>Rect } }
+ *   collectedStar: { star: { x:number,y:number,width:number,height:number, getBounds?:()=>Rect, isRed?: boolean } }
  * }} GameEventMap */
 /** Event names emitted by the game. */
 /** @typedef {keyof GameEventMap} GameEvent */
@@ -60,7 +60,7 @@
 /** @typedef {import('./core/GameStateMachine.js').GameStateMachine} GameStateMachine */
 
 /** Pre-rendered sprite atlas surfaces used by RenderManager. */
-/** @typedef {{ bullet: HTMLCanvasElement, bulletTrail: number, star: HTMLCanvasElement, starBaseSize: number }} SpriteAtlas */
+/** @typedef {{ bullet: HTMLCanvasElement, bulletTrail: number, star: HTMLCanvasElement, starRed: HTMLCanvasElement, starBaseSize: number }} SpriteAtlas */
 
 /**
  * Main game state shape used by the orchestrator in game.js.

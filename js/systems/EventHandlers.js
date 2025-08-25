@@ -33,8 +33,9 @@ export const EventHandlers = {
 
     // Player collects star → score, score UI
     unsubs.push(
-      events.on("collectedStar", () => {
-        game.score += CONFIG.GAME.STAR_SCORE;
+      events.on("collectedStar", ({ star }) => {
+        const add = star && star.isRed ? CONFIG.GAME.STAR_SCORE_RED : CONFIG.GAME.STAR_SCORE;
+        game.score += add;
         game.updateScore();
       })
     );
@@ -57,7 +58,7 @@ export const EventHandlers = {
               CONFIG.STAR.PARTICLE_LIFE,
               CONFIG.STAR.PARTICLE_LIFE,
               rng.range(0, CONFIG.STAR.PARTICLE_SIZE_VARIATION) + CONFIG.STAR.PARTICLE_SIZE_MIN,
-              CONFIG.COLORS.STAR.BASE
+              star && star.isRed ? CONFIG.COLORS.STAR_RED.BASE : CONFIG.COLORS.STAR.BASE
             )
           );
         }

@@ -11,13 +11,16 @@ export class Star {
    * @param {number} width - The width of the star.
    * @param {number} height - The height of the star.
    * @param {number} speed - The speed of the star.
+   * @param {boolean} [isRed=false] - Whether this is a red bonus star.
    */
-  constructor(x, y, width, height, speed) {
+  constructor(x, y, width, height, speed, isRed = false) {
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
     this.speed = speed;
+    /** @type {boolean} */
+    this.isRed = !!isRed;
   }
 
   /**
@@ -46,7 +49,8 @@ export class Star {
       scaledSize = size * pulse;
     }
 
-    ctx.shadowColor = CONFIG.COLORS.STAR.BASE;
+    const colors = this.isRed ? CONFIG.COLORS.STAR_RED : CONFIG.COLORS.STAR;
+    ctx.shadowColor = colors.BASE;
     ctx.shadowBlur = CONFIG.STAR.SHADOW_BLUR;
 
     const starGradient = ctx.createRadialGradient(
@@ -57,9 +61,9 @@ export class Star {
       centerY,
       scaledSize
     );
-    starGradient.addColorStop(0, CONFIG.COLORS.STAR.GRAD_IN);
-    starGradient.addColorStop(0.3, CONFIG.COLORS.STAR.GRAD_MID);
-    starGradient.addColorStop(1, CONFIG.COLORS.STAR.GRAD_OUT);
+    starGradient.addColorStop(0, colors.GRAD_IN);
+    starGradient.addColorStop(0.3, colors.GRAD_MID);
+    starGradient.addColorStop(1, colors.GRAD_OUT);
 
     ctx.fillStyle = starGradient;
     Star.drawStar(ctx, centerX, centerY, scaledSize);
@@ -79,13 +83,15 @@ export class Star {
    * @param {number} width
    * @param {number} height
    * @param {number} speed
+   * @param {boolean} [isRed=false]
    */
-  reset(x, y, width, height, speed) {
+  reset(x, y, width, height, speed, isRed = false) {
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
     this.speed = speed;
+    this.isRed = !!isRed;
   }
 
   /**

@@ -33,6 +33,7 @@ import { Star } from "../entities/Star.js";
  * @property {ViewSize} view
  * @property {number} starSpeed
  * @property {StarPool | null | undefined} [starPool]
+ * @property {number} [_yellowStarCount]
  */
 
 /**
@@ -90,8 +91,16 @@ export class SpawnManager {
     const minX = CONFIG.STAR.HORIZONTAL_MARGIN / 2;
     const maxX = Math.max(minX, game.view.width - width - CONFIG.STAR.HORIZONTAL_MARGIN / 2);
     const x = minX + rng.nextFloat() * (maxX - minX);
+    // Determine if this star should be a red bonus star
+    // We spawn 1 red for every 10 yellow stars. Use a simple counter on the game object.
+    const count = (game._yellowStarCount = game._yellowStarCount | 0);
+    const isRed = count >= 10;
+    // Track yellows: after 10 yellows, spawn one red and reset
+    if (isRed) game._yellowStarCount = 0;
+    else game._yellowStarCount = count + 1;
+
     return game.starPool
-      ? game.starPool.acquire(x, CONFIG.STAR.SPAWN_Y, width, height, speed)
-      : new Star(x, CONFIG.STAR.SPAWN_Y, width, height, speed);
+      ? game.starPool.acquire(x, CONFIG.STAR.SPAWN_Y, width, height, speed, isRed)
+      : new Star(x, CONFIG.STAR.SPAWN_Y, width, height, speed, isRed);
   }
 }

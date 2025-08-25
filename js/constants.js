@@ -74,6 +74,13 @@ const COLORS = deepFreeze({
     GRAD_MID: "#ffd700",
     GRAD_OUT: "#ffa500",
   },
+  // Red bonus star palette
+  STAR_RED: {
+    BASE: "#ff3b30",
+    GRAD_IN: "#ffffff",
+    GRAD_MID: "#ff6b6b",
+    GRAD_OUT: "#ff3b30",
+  },
   UI: {
     OVERLAY_BACKDROP: "rgba(0,0,0,0.5)",
     OVERLAY_TEXT: "#fff",
@@ -128,6 +135,7 @@ export const CONFIG = deepFreeze({
     SHOT_COOLDOWN: 200,
     STARFIELD_COUNT: 150,
     STAR_SCORE: 20,
+    STAR_SCORE_RED: 50,
     STAR_SPAWN_RATE: 1.0,
   },
   INPUT: {

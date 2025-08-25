@@ -1,6 +1,6 @@
 # DARK HORIZON
 
-Fast, responsive space shooter built with HTML5 Canvas and vanilla JavaScript (ES modules). Collect stars, blast asteroids, and chase a new high score.
+Fast, responsive space shooter built with HTML5 Canvas and vanilla JavaScript (ES modules). Collect yellow stars (and occasional red bonus stars), blast asteroids, and chase a new high score.
 
 ## Quick start
 
@@ -42,7 +42,8 @@ Or use the npm scripts (requires Node.js):
 - Move: Arrow keys or WASD, or guide with mouse/touch
 - Shoot: Space, mouse click, or tap
 - Pause/Resume: Esc
-- Score: +10 per asteroid, +20 per star
+- Score: +10 per asteroid, +20 per yellow star, +50 per red star
+  - One red star appears after every 10 yellow stars
 - Game over: Collide with an asteroid
 - Restart: Click “Launch Mission” or “Play Again”
 
@@ -54,6 +55,13 @@ Or use the npm scripts (requires Node.js):
 - High score persisted with `localStorage`
 - Accessibility touches: focus guards for overlays, ARIA labels, and restored focus on tab return
 
+## What's new
+
+- 2025-08-24
+  - Red bonus stars: one red star spawns after every 10 yellow stars.
+  - Scoring: +50 for red stars (yellow stars remain +20).
+  - Distinct red star visuals and particles.
+
 ## Project structure
 
 - `index.html` — App shell and canvas
@@ -64,7 +72,7 @@ Or use the npm scripts (requires Node.js):
 - `js/managers/` — Focused modules that keep `game.js` small:
   - `BackgroundManager` — init/draw background, nebulae, starfield, pause overlay
   - `InputManager` — keyboard, mouse, touch, and focus guards (Esc for pause)
-  - `SpriteManager` — pre-rendered sprites for bullets/stars
+  - `SpriteManager` — pre-rendered sprites for bullets and yellow/red stars
   - `UIManager` — DOM updates, overlays, and high score load/persist
   - `CollisionManager` — bullets/asteroids/player/star collisions and side-effects
   - `SpawnManager` — spawning and creation of asteroids and stars
