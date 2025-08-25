@@ -1,6 +1,6 @@
 # DARK HORIZON
 
-Fast, responsive space shooter built with HTML5 Canvas and vanilla JavaScript (ES modules). Collect yellow stars (and occasional red bonus stars), blast asteroids, and chase a new high score.
+Fast, responsive space shooter built with HTML5 Canvas and vanilla JavaScript (ES modules). Dominate yellow stars (+20) and red bonus stars (+50), destroy asteroids (+10), and chase a new high score — but beware: some asteroids are indestructible.
 
 ## Quick start
 
@@ -44,6 +44,7 @@ Or use the npm scripts (requires Node.js):
 - Pause/Resume: Esc
 - Score: +10 per asteroid, +20 per yellow star, +50 per red star
   - One red star appears after every 10 yellow stars
+  - Some asteroids are indestructible; bullets can't destroy them
 - Game over: Collide with an asteroid
 - Restart: Click “Launch Mission” or “Play Again”
 
@@ -54,13 +55,7 @@ Or use the npm scripts (requires Node.js):
 - Starfield, nebulae, engine glow, explosions, and particle FX
 - High score persisted with `localStorage`
 - Accessibility touches: focus guards for overlays, ARIA labels, and restored focus on tab return
-
-## What's new
-
-- 2025-08-24
-  - Red bonus stars: one red star spawns after every 10 yellow stars.
-  - Scoring: +50 for red stars (yellow stars remain +20).
-  - Distinct red star visuals and particles.
+- Indestructible asteroids appear periodically to increase challenge
 
 ## Project structure
 
