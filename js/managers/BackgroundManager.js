@@ -42,22 +42,14 @@ export class BackgroundManager {
       background: { nebulaConfigs, starField },
     } = ctxObj;
     Background.draw(ctx, width, height);
-    if (running && nebulaConfigs) {
+    // Do not darken the background here; keep nebula brightness unchanged while paused.
+    // Always draw nebula when available (even when paused or game over)
+    if (nebulaConfigs) {
       Nebula.draw(ctx, nebulaConfigs);
     }
     const timeSec = typeof ctxObj.timeSec === "number" ? ctxObj.timeSec : (animTime || 0) / 1000;
     const dtSec = typeof ctxObj.dtSec === "number" ? ctxObj.dtSec : CONFIG.TIME.DEFAULT_DT;
-    StarField.draw(ctx, width, height, starField, timeSec, running && paused, dtSec, ctxObj.rng);
-    if (running && paused) {
-      ctx.save();
-      ctx.fillStyle = CONFIG.UI.PAUSE_OVERLAY.BACKDROP;
-      ctx.fillRect(0, 0, width, height);
-      ctx.fillStyle = CONFIG.UI.PAUSE_OVERLAY.TEXT_COLOR;
-      ctx.font = CONFIG.UI.PAUSE_OVERLAY.FONT;
-      ctx.textAlign = CONFIG.UI.PAUSE_OVERLAY.TEXT_ALIGN;
-      ctx.textBaseline = CONFIG.UI.PAUSE_OVERLAY.TEXT_BASELINE;
-      ctx.fillText(CONFIG.UI.PAUSE_OVERLAY.MESSAGE, width / 2, height / 2);
-      ctx.restore();
-    }
+    // Freeze stars while paused
+    StarField.draw(ctx, width, height, starField, timeSec, paused, dtSec, ctxObj.rng);
   }
 }

@@ -805,10 +805,12 @@ class DarkHorizon {
         this.drawFrame();
         this._pausedFrameRendered = true;
       }
+      this.drawPauseOverlayText();
       return;
     }
 
     this.drawFrame();
+    if (this.state.isPaused()) this.drawPauseOverlayText();
   }
 
   /**
@@ -826,12 +828,26 @@ class DarkHorizon {
     this.engineTrail.draw(this.ctx);
   }
 
+  /** Draw the pause message above everything else. */
+  drawPauseOverlayText() {
+    const { ctx } = this;
+    const { width, height } = this.view;
+    ctx.save();
+    ctx.fillStyle = CONFIG.UI.PAUSE_OVERLAY.TEXT_COLOR;
+    ctx.font = CONFIG.UI.PAUSE_OVERLAY.FONT;
+    ctx.textAlign = CONFIG.UI.PAUSE_OVERLAY.TEXT_ALIGN;
+    ctx.textBaseline = CONFIG.UI.PAUSE_OVERLAY.TEXT_BASELINE;
+    ctx.fillText(CONFIG.UI.PAUSE_OVERLAY.MESSAGE, width / 2, height / 2);
+    ctx.restore();
+  }
+
   /**
    * Init the background.
    */
   initBackground() {
     const { nebulaConfigs, starField } = BackgroundManager.init(getGameContext(this));
-    this.nebulaConfigs = nebulaConfigs;
+    // Preserve existing nebula when not re-generated (e.g., paused/gameover)
+    if (nebulaConfigs) this.nebulaConfigs = nebulaConfigs;
     this.starField = starField;
   }
 
