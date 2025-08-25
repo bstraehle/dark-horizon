@@ -12,13 +12,18 @@ export class Asteroid {
    * @param {number} height - The height of the asteroid.
    * @param {number} speed - The speed of the asteroid.
    * @param {import('../types.js').RNGLike} [rng] - Optional RNG for crater placement.
+   * @param {boolean} [isIndestructible=false] - If true, this asteroid cannot be destroyed by bullets.
    */
-  constructor(x, y, width, height, speed, rng) {
+  constructor(x, y, width, height, speed, rng, isIndestructible = false) {
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
     this.speed = speed;
+    /** @type {boolean} */
+    this.isIndestructible = !!isIndestructible;
+    /** Remaining time for shield hit flash (seconds) */
+    this._shieldFlash = 0;
     const radius = this.width / 2;
     const craterCount = 3;
     const rand =
@@ -36,6 +41,9 @@ export class Asteroid {
    */
   update(dtSec = CONFIG.TIME.DEFAULT_DT) {
     this.y += this.speed * dtSec;
+    if (this.isIndestructible && this._shieldFlash > 0) {
+      this._shieldFlash = Math.max(0, this._shieldFlash - dtSec);
+    }
   }
 
   /**
@@ -47,6 +55,8 @@ export class Asteroid {
     const centerX = this.x + this.width / 2;
     const centerY = this.y + this.height / 2;
     const radius = this.width / 2;
+    // Use a slightly darker rock body for indestructible; blue shield/pulse are added below
+    const palette = this.isIndestructible ? CONFIG.COLORS.ASTEROID_DARK : CONFIG.COLORS.ASTEROID;
     const asteroidGradient = ctx.createRadialGradient(
       centerX - radius * 0.3,
       centerY - radius * 0.3,
@@ -55,22 +65,65 @@ export class Asteroid {
       centerY,
       radius
     );
-    asteroidGradient.addColorStop(0, CONFIG.COLORS.ASTEROID.GRAD_IN);
-    asteroidGradient.addColorStop(0.6, CONFIG.COLORS.ASTEROID.GRAD_MID);
-    asteroidGradient.addColorStop(1, CONFIG.COLORS.ASTEROID.GRAD_OUT);
+    asteroidGradient.addColorStop(0, palette.GRAD_IN);
+    asteroidGradient.addColorStop(0.6, palette.GRAD_MID);
+    asteroidGradient.addColorStop(1, palette.GRAD_OUT);
     ctx.fillStyle = asteroidGradient;
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, PI2);
     ctx.fill();
-    ctx.fillStyle = CONFIG.COLORS.ASTEROID.CRATER;
+    ctx.fillStyle = palette.CRATER;
     for (const c of this._craters) {
       ctx.beginPath();
       ctx.arc(centerX + c.dx, centerY + c.dy, c.r, 0, PI2);
       ctx.fill();
     }
-    ctx.strokeStyle = CONFIG.COLORS.ASTEROID.OUTLINE;
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = palette.OUTLINE;
+    ctx.lineWidth = this.isIndestructible ? 3 : 2;
     ctx.stroke();
+
+    // Energy shield: soft outer glow + hit pulse (no inner ring)
+    if (this.isIndestructible) {
+      // Outer glow halo
+      ctx.save();
+      const glowR = Math.max(radius + 3, radius * 1.15);
+      const grad = ctx.createRadialGradient(
+        centerX,
+        centerY,
+        radius * 0.9,
+        centerX,
+        centerY,
+        glowR
+      );
+      const shield =
+        (CONFIG.COLORS.ASTEROID_HARD && CONFIG.COLORS.ASTEROID_HARD.SHIELD) || "#7fc3ff";
+      const flashAlpha = this._shieldFlash > 0 ? CONFIG.ASTEROID.SHIELD_FLASH_EXTRA_ALPHA : 0;
+      grad.addColorStop(0, "rgba(0,0,0,0)");
+      grad.addColorStop(0.7, shield.replace(/#/, "#"));
+      grad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.globalAlpha = 0.6 + flashAlpha;
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, glowR, 0, PI2);
+      ctx.fill();
+      ctx.restore();
+
+      // Hit flash ring: bright stroked ring with shadow that pulses during flash window
+      if (this._shieldFlash > 0) {
+        const t = Math.max(0, Math.min(1, this._shieldFlash / CONFIG.ASTEROID.SHIELD_FLASH_TIME));
+        ctx.save();
+        ctx.strokeStyle = shield;
+        ctx.lineWidth = 2 + 2 * t;
+        ctx.shadowColor = shield;
+        ctx.shadowBlur = 10 + 10 * t;
+        ctx.globalAlpha = 0.6 + 0.6 * t;
+        const ringR = radius * (1.05 + 0.05 * t);
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, ringR, 0, PI2);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
     ctx.restore();
   }
 
@@ -88,13 +141,16 @@ export class Asteroid {
    * @param {number} height
    * @param {number} speed
    * @param {import('../types.js').RNGLike} [rng]
+   * @param {boolean} [isIndestructible=false]
    */
-  reset(x, y, width, height, speed, rng) {
+  reset(x, y, width, height, speed, rng, isIndestructible = false) {
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
     this.speed = speed;
+    this.isIndestructible = !!isIndestructible;
+    this._shieldFlash = 0;
     const radius = this.width / 2;
     const craterCount = 3;
     const rand =
@@ -104,5 +160,11 @@ export class Asteroid {
       dy: (rand.nextFloat() - 0.5) * radius * 0.8,
       r: rand.nextFloat() * radius * 0.3 + 2,
     }));
+  }
+
+  /** Trigger a brief shield hit flash (no-op for normal asteroids). */
+  onShieldHit() {
+    if (!this.isIndestructible) return;
+    this._shieldFlash = CONFIG.ASTEROID.SHIELD_FLASH_TIME;
   }
 }

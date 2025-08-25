@@ -25,6 +25,7 @@ import { Star } from "../entities/Star.js";
  * @property {ViewSize} view
  * @property {number} asteroidSpeed
  * @property {AsteroidPool | null | undefined} [asteroidPool]
+ * @property {number} [_normalAsteroidCount]
  */
 
 /**
@@ -72,9 +73,22 @@ export class SpawnManager {
     const minX = CONFIG.ASTEROID.HORIZONTAL_MARGIN / 2;
     const maxX = Math.max(minX, game.view.width - width - CONFIG.ASTEROID.HORIZONTAL_MARGIN / 2);
     const x = minX + rng.nextFloat() * (maxX - minX);
+    // Every 11th asteroid (after 10 normals) is indestructible
+    const count = (game._normalAsteroidCount = game._normalAsteroidCount | 0);
+    const isIndestructible = count >= 10;
+    if (isIndestructible) game._normalAsteroidCount = 0;
+    else game._normalAsteroidCount = count + 1;
     return game.asteroidPool
-      ? game.asteroidPool.acquire(x, CONFIG.ASTEROID.SPAWN_Y, width, height, speed, rng)
-      : new Asteroid(x, CONFIG.ASTEROID.SPAWN_Y, width, height, speed, rng);
+      ? game.asteroidPool.acquire(
+          x,
+          CONFIG.ASTEROID.SPAWN_Y,
+          width,
+          height,
+          speed,
+          rng,
+          isIndestructible
+        )
+      : new Asteroid(x, CONFIG.ASTEROID.SPAWN_Y, width, height, speed, rng, isIndestructible);
   }
 
   /**

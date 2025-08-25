@@ -150,9 +150,19 @@ export class CollisionManager {
           const a = group[k];
           if (toRemoveAsteroids.has(a)) continue;
           if (CollisionManager.intersects(b, a)) {
+            // Bullets always get removed on impact
             toRemoveBullets.add(b);
-            toRemoveAsteroids.add(a);
-            if (game.events) game.events.emit("bulletHitAsteroid", { asteroid: a, bullet: b });
+            // Indestructible asteroids are not removed and produce no explosion/score
+            if (!a.isIndestructible) {
+              toRemoveAsteroids.add(a);
+              if (game.events) game.events.emit("bulletHitAsteroid", { asteroid: a, bullet: b });
+            } else if (a && typeof a.onShieldHit === "function") {
+              try {
+                a.onShieldHit();
+              } catch {
+                /* noop */
+              }
+            }
             hit = true;
             break;
           }

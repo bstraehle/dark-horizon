@@ -26,6 +26,25 @@ const COLORS = deepFreeze({
     GRAD_OUT: "#333",
     OUTLINE: "#444",
   },
+  // Hard/indestructible asteroid variant (darker, higher contrast outline)
+  ASTEROID_HARD: {
+    CRATER: "#333",
+    GRAD_IN: "#333",
+    GRAD_MID: "#222",
+    GRAD_OUT: "#111",
+    OUTLINE: "#777",
+    RING: "#999",
+    SHIELD: "#4da3ff",
+  },
+  // Slightly darker than regular asteroid, used when shielded to keep core natural
+  ASTEROID_DARK: {
+    CRATER: "#3c3c3c",
+    GRAD_IN: "#4c4c4c",
+    GRAD_MID: "#2f2f2f",
+    GRAD_OUT: "#1a1a1a",
+    OUTLINE: "#3a3a3a",
+    SHIELD: "#4da3ff",
+  },
   BACKGROUND: {
     BOTTOM: "#444",
     MID: "#222",
@@ -98,6 +117,8 @@ export const CONFIG = deepFreeze({
     SIZE_VARIATION: 50,
     SPAWN_Y: -40,
     SPEED_VARIATION: 120,
+    SHIELD_FLASH_TIME: 0.15,
+    SHIELD_FLASH_EXTRA_ALPHA: 0.4,
   },
   BULLET: {
     HEIGHT: 15,

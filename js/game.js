@@ -137,6 +137,8 @@ class DarkHorizon {
     this.stars = [];
     /** Track consecutive yellow stars spawned to insert red bonus ones */
     this._yellowStarCount = 0;
+    /** Track normals to insert an indestructible asteroid after 10 normals */
+    this._normalAsteroidCount = 0;
 
     this.bulletPool = new ObjectPool(
       (x, y, w, h, speed) => new Bullet(x, y, w, h, speed),
@@ -150,7 +152,8 @@ class DarkHorizon {
       { maxSize: 4096 }
     );
     this.asteroidPool = new ObjectPool(
-      (x, y, w, h, speed, rng) => new Asteroid(x, y, w, h, speed, rng),
+      (x, y, w, h, speed, rng, isIndestructible = false) =>
+        new Asteroid(x, y, w, h, speed, rng, isIndestructible),
       undefined,
       { maxSize: 256 }
     );
@@ -565,6 +568,8 @@ class DarkHorizon {
     this.stars = [];
     this.fireLimiter.reset();
     this.input.fireHeld = false;
+    this._yellowStarCount = 0;
+    this._normalAsteroidCount = 0;
   }
 
   /**
@@ -755,7 +760,8 @@ class DarkHorizon {
         aW,
         aH,
         this.asteroidSpeed,
-        this.rng
+        this.rng,
+        false
       );
 
       // Stars
