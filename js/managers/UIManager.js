@@ -39,6 +39,16 @@ export class UIManager {
     return high;
   }
 
+  /** Show pause overlay. */
+  static showPause(pauseScreen) {
+    if (pauseScreen) pauseScreen.classList.remove("hidden");
+  }
+
+  /** Hide pause overlay. */
+  static hidePause(pauseScreen) {
+    if (pauseScreen) pauseScreen.classList.add("hidden");
+  }
+
   /** Show game over overlay and focus restart button.
    * @param {HTMLElement|null} gameOverScreen
    * @param {HTMLElement|null} restartBtn

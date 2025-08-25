@@ -71,6 +71,7 @@ class DarkHorizon {
     this.view = { width: 0, height: 0, dpr: 1 };
     this.gameInfo = /** @type {HTMLElement} */ (document.getElementById("gameInfo"));
     this.gameOverScreen = /** @type {HTMLElement} */ (document.getElementById("gameOverScreen"));
+    this.pauseScreen = /** @type {HTMLElement} */ (document.getElementById("pauseScreen"));
     this.startBtn = /** @type {HTMLButtonElement} */ (document.getElementById("startBtn"));
     this.restartBtn = /** @type {HTMLButtonElement} */ (document.getElementById("restartBtn"));
     this.currentScoreEl = /** @type {HTMLElement} */ (document.getElementById("currentScore"));
@@ -576,8 +577,13 @@ class DarkHorizon {
    * Toggle pause state.
    */
   togglePause() {
-    if (this.state.isPaused()) this.state.resume();
-    else if (this.state.isRunning()) this.state.pause();
+    if (this.state.isPaused()) {
+      this.state.resume();
+      UIManager.hidePause(this.pauseScreen);
+    } else if (this.state.isRunning()) {
+      this.state.pause();
+      UIManager.showPause(this.pauseScreen);
+    }
     this._pausedFrameRendered = false;
   }
 
@@ -587,6 +593,8 @@ class DarkHorizon {
   gameOver() {
     this.state.end();
     this.updateHighScore();
+    // Ensure pause overlay is hidden if game ends while paused
+    UIManager.hidePause(this.pauseScreen);
     this.showGameOver();
     if (this.loop) this.loop.stop();
   }
@@ -805,12 +813,11 @@ class DarkHorizon {
         this.drawFrame();
         this._pausedFrameRendered = true;
       }
-      this.drawPauseOverlayText();
+      // Pause text now shown via DOM overlay, not canvas
       return;
     }
 
     this.drawFrame();
-    if (this.state.isPaused()) this.drawPauseOverlayText();
   }
 
   /**
@@ -830,15 +837,7 @@ class DarkHorizon {
 
   /** Draw the pause message above everything else. */
   drawPauseOverlayText() {
-    const { ctx } = this;
-    const { width, height } = this.view;
-    ctx.save();
-    ctx.fillStyle = CONFIG.UI.PAUSE_OVERLAY.TEXT_COLOR;
-    ctx.font = CONFIG.UI.PAUSE_OVERLAY.FONT;
-    ctx.textAlign = CONFIG.UI.PAUSE_OVERLAY.TEXT_ALIGN;
-    ctx.textBaseline = CONFIG.UI.PAUSE_OVERLAY.TEXT_BASELINE;
-    ctx.fillText(CONFIG.UI.PAUSE_OVERLAY.MESSAGE, width / 2, height / 2);
-    ctx.restore();
+    // Deprecated: pause is shown using DOM overlay to avoid blurry canvas text
   }
 
   /**
