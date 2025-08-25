@@ -36,7 +36,6 @@ export class BackgroundManager {
     const {
       ctx,
       view: { width, height },
-      running,
       paused,
       animTime,
       background: { nebulaConfigs, starField },
