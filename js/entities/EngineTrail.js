@@ -26,7 +26,10 @@ export class EngineTrail {
       y: trailY,
       life: maxLife,
       maxLife,
-      size: (rng ? rng.range(0, sizeMax) : Math.random() * sizeMax) + sizeMin,
+      // rng.range is optional on RNGLike — guard before invoking
+      size:
+        (rng && typeof rng.range === "function" ? rng.range(0, sizeMax) : Math.random() * sizeMax) +
+        sizeMin,
     });
   }
 

@@ -39,12 +39,16 @@ export class UIManager {
     return high;
   }
 
-  /** Show pause overlay. */
+  /** Show pause overlay.
+   * @param {HTMLElement|null} pauseScreen
+   */
   static showPause(pauseScreen) {
     if (pauseScreen) pauseScreen.classList.remove("hidden");
   }
 
-  /** Hide pause overlay. */
+  /** Hide pause overlay.
+   * @param {HTMLElement|null} pauseScreen
+   */
   static hidePause(pauseScreen) {
     if (pauseScreen) pauseScreen.classList.add("hidden");
   }

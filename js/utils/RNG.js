@@ -11,6 +11,7 @@ export class RNG {
   }
 
   /** Create a RNG from a string (hashed to u32). */
+  /** @param {string} str */
   static fromString(str) {
     let h = 2166136261 >>> 0; // FNV-1a
     for (let i = 0; i < str.length; i++) {
@@ -29,16 +30,19 @@ export class RNG {
   }
 
   /** Integer in (0, max) */
+  /** @param {number} max */
   nextInt(max) {
     return (this.nextFloat() * max) | 0;
   }
 
   /** Float in (min, max) */
+  /** @param {number} min @param {number} max */
   range(min, max) {
     return min + (max - min) * this.nextFloat();
   }
 
   /** Pick a value from an array. */
+  /** @template T @param {T[]} arr @returns {T} */
   pick(arr) {
     return arr[this.nextInt(arr.length)];
   }
@@ -49,10 +53,12 @@ export class RNG {
   }
 
   /** Replace the seed. */
+  /** @param {number} seed */
   reseed(seed) {
     this._s = RNG._seed32(seed);
   }
 
+  /** @param {any} seed */
   static _seed32(seed) {
     if (typeof seed === "number" && Number.isFinite(seed)) return seed >>> 0;
     // Try crypto if available for non-deterministic default

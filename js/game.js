@@ -197,6 +197,7 @@ class DarkHorizon {
   }
 
   /** no-op placeholder to hint presence; handlers are registered in systems/EventHandlers */
+  /** @type {(() => void) | null} */
   _unsubscribeEvents = null;
 
   /**
@@ -307,6 +308,7 @@ class DarkHorizon {
 
   /**
    * Global keydown handler for pause/resume toggling.
+   * @param {KeyboardEvent} e
    */
   handlePauseKeyDown(e) {
     if (this.shouldTogglePause(e)) {
@@ -387,7 +389,7 @@ class DarkHorizon {
       }
       return;
     }
-    if (this.movementKeys.has(e.code)) {
+    if (this.movementKeys?.has && this.movementKeys.has(e.code)) {
       this.input.clearMouse();
     }
   }
@@ -452,7 +454,9 @@ class DarkHorizon {
     this.shoot();
   }
 
-  /** End touch (lift/cancel) -> stop continuous fire. */
+  /** End touch (lift/cancel) -> stop continuous fire.
+   * @param {TouchEvent} [e]
+   */
   handleTouchEnd(e) {
     if (e && e.cancelable) e.preventDefault();
     this.input.fireHeld = false;
@@ -549,6 +553,11 @@ class DarkHorizon {
    * Reset score and clear dynamic entity arrays.
    */
   resetGameState() {
+    /**
+     * Release all elements back to their pool.
+     * @param {Array<any>} arr
+     * @param {{ release: (obj: any) => void } | undefined} pool
+     */
     const releaseAll = (arr, pool) => {
       if (!arr || !pool) return;
       for (const it of arr) pool.release(it);
@@ -655,6 +664,7 @@ class DarkHorizon {
 
   /**
    * Randomly spawn asteroids and collectible stars.
+   * @param {number} dtSec
    */
   spawnObjects(dtSec) {
     SpawnManager.spawnObjects(this, dtSec);
@@ -866,7 +876,7 @@ class DarkHorizon {
    * Draw collectible stars with pulsing and glow effects.
    */
   drawCollectibleStars() {
-    RenderManager.drawCollectibleStars(this.ctx, this.stars, this.timeSec, this.sprites);
+    RenderManager.drawCollectibleStars(this.ctx, this.stars, this.sprites, this.timeSec);
   }
 
   /**
