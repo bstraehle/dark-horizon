@@ -167,6 +167,7 @@
  * @property {(e:Event)=>void} handleGameOverFocusGuard
  * @property {()=>void} handleWindowFocus
  * @property {()=>void} handleVisibilityChange
+ * @property {(e:FocusEvent)=>void} handleDocumentFocusIn
  * @property {()=>void} handleScroll
  */
 

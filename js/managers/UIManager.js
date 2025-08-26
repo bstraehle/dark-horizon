@@ -94,7 +94,17 @@ export class UIManager {
         if (document.activeElement !== el) {
           setTimeout(() => {
             tryFocus();
-          }, 250);
+            if (document.activeElement !== el) {
+              setTimeout(() => {
+                tryFocus();
+                if (document.activeElement !== el) {
+                  setTimeout(() => {
+                    tryFocus();
+                  }, 750);
+                }
+              }, 250);
+            }
+          }, 100);
         }
       });
     }
@@ -136,6 +146,32 @@ export class UIManager {
   static handleVisibilityChange(gameInfo, startBtn, gameOverScreen, restartBtn) {
     if (!document.hidden) {
       UIManager.ensureOverlayFocus(gameInfo, startBtn, gameOverScreen, restartBtn);
+    }
+  }
+
+  /** Document-level focusin guard to restore focus to visible overlay button on mobile.
+   * @param {FocusEvent} e
+   * @param {HTMLElement|null} gameInfo
+   * @param {HTMLElement|null} startBtn
+   * @param {HTMLElement|null} gameOverScreen
+   * @param {HTMLElement|null} restartBtn
+   */
+  static handleDocumentFocusIn(e, gameInfo, startBtn, gameOverScreen, restartBtn) {
+    const overlayGameOverVisible = !!(
+      gameOverScreen && !gameOverScreen.classList.contains("hidden")
+    );
+    const overlayStartVisible = !!(gameInfo && !gameInfo.classList.contains("hidden"));
+    if (!overlayGameOverVisible && !overlayStartVisible) return;
+
+    const t = /** @type {Element|null} */ (e && e.target instanceof Element ? e.target : null);
+    if (overlayGameOverVisible) {
+      const isRestart = t === restartBtn || (t && t.closest && t.closest("#restartBtn"));
+      if (!isRestart) UIManager.focusWithRetry(restartBtn);
+      return;
+    }
+    if (overlayStartVisible) {
+      const isStart = t === startBtn || (t && t.closest && t.closest("#startBtn"));
+      if (!isStart) UIManager.focusWithRetry(startBtn);
     }
   }
 

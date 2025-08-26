@@ -50,6 +50,8 @@ export class InputManager {
     window.addEventListener("focus", handlers.handleWindowFocus);
     window.addEventListener("pageshow", handlers.handleWindowFocus);
     document.addEventListener("visibilitychange", handlers.handleVisibilityChange);
+    // When focus shifts inside the document (after app switch, etc.), ensure overlay button regains focus
+    document.addEventListener("focusin", handlers.handleDocumentFocusIn, true);
     // Update canvas rect on scroll (affects touch/mouse offsets)
     window.addEventListener("scroll", handlers.handleScroll, { passive: true });
   }

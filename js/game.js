@@ -241,6 +241,7 @@ class DarkHorizon {
     this.ensureOverlayFocus = this.ensureOverlayFocus.bind(this);
     this.handleWindowFocus = this.handleWindowFocus.bind(this);
     this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
+    this.handleDocumentFocusIn = this.handleDocumentFocusIn.bind(this);
     this.handlePauseKeyDown = this.handlePauseKeyDown.bind(this);
     this.shouldTogglePause = this.shouldTogglePause.bind(this);
     this.handleScroll = this.handleScroll.bind(this);
@@ -277,6 +278,7 @@ class DarkHorizon {
         handleGameOverFocusGuard: this.handleGameOverFocusGuard,
         handleWindowFocus: this.handleWindowFocus,
         handleVisibilityChange: this.handleVisibilityChange,
+        handleDocumentFocusIn: this.handleDocumentFocusIn,
         handleScroll: this.handleScroll,
         handlePauseKeyDown: this.handlePauseKeyDown,
       }
@@ -351,6 +353,20 @@ class DarkHorizon {
    */
   handleVisibilityChange() {
     UIManager.handleVisibilityChange(
+      this.gameInfo,
+      this.startBtn,
+      this.gameOverScreen,
+      this.restartBtn
+    );
+  }
+
+  /**
+   * Document-level focusin to re-focus overlay button if focus is lost (mobile app switch/back).
+   * @param {FocusEvent} e
+   */
+  handleDocumentFocusIn(e) {
+    UIManager.handleDocumentFocusIn(
+      e,
       this.gameInfo,
       this.startBtn,
       this.gameOverScreen,
