@@ -1,13 +1,14 @@
 name: CI
-permissions:
-  contents: read
-  pull-requests: write
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   build:
@@ -19,8 +20,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          cache: npm
+          node-version: '22'
+          cache: 'npm'
           cache-dependency-path: package-lock.json
 
       - name: Install dependencies
