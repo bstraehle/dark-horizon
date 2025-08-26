@@ -20,11 +20,12 @@
  */
 const COLORS = deepFreeze({
   ASTEROID: {
-    CRATER: "#555",
-    GRAD_IN: "#666",
-    GRAD_MID: "#444",
-    GRAD_OUT: "#333",
-    OUTLINE: "#444",
+    CRATER: "#777777", // lighter gray (crater)
+    GRAD_IN: "#999999", // light gray (center)
+    GRAD_MID: "#666666", // medium gray (mid)
+    GRAD_OUT: "#333333", // dark gray (outer)
+    OUTLINE: "#666666", // subtle dark gray outline
+    RING: "#888888", // match crater color for unified look
   },
   // Hard/indestructible asteroid variant (darker, higher contrast outline)
   ASTEROID_HARD: {
@@ -38,12 +39,13 @@ const COLORS = deepFreeze({
   },
   // Slightly darker than regular asteroid, used when shielded to keep core natural
   ASTEROID_DARK: {
-    CRATER: "#343434",
-    GRAD_IN: "#444444",
-    GRAD_MID: "#282828",
-    GRAD_OUT: "#141414",
-    OUTLINE: "#323232",
-    SHIELD: "#4da3ff",
+    CRATER: "#8B0000", // dark red
+    GRAD_IN: "#FF2400", // bright red (glow center)
+    GRAD_MID: "#B22222", // firebrick
+    GRAD_OUT: "#330000", // very dark red
+    OUTLINE: "#B22222", // orange-red outline
+    SHIELD: "#FF2400", // matching glow for shield
+    RING: "#8B0000", // match crater color for unified look
   },
   BACKGROUND: {
     BOTTOM: "#444",
@@ -95,10 +97,10 @@ const COLORS = deepFreeze({
   },
   // Red bonus star palette
   STAR_RED: {
-    BASE: "#ff3b30",
-    GRAD_IN: "#ffffff",
-    GRAD_MID: "#ff6b6b",
-    GRAD_OUT: "#ff3b30",
+    BASE: "#d80000", // deep saturated red
+    GRAD_IN: "#ffcccc", // pale red for inner glow
+    GRAD_MID: "#dd2a2a", // strong red for mid
+    GRAD_OUT: "#b20000", // very deep red for outer edge
   },
   UI: {
     OVERLAY_BACKDROP: "rgba(0,0,0,0.5)",
@@ -222,7 +224,7 @@ export const CONFIG = deepFreeze({
     ASTEROID_MOBILE: 150,
     BULLET: 480,
     PLAYER: 480,
-    STAR: 60,
+    STAR: 100,
   },
   STARFIELD: {
     SIZE_MIN: 0.5,

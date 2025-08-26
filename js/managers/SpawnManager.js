@@ -133,7 +133,7 @@ export class SpawnManager {
     // Determine if this star should be a red bonus star
     // We spawn 1 red for every 10 yellow stars. Use a simple counter on the game object.
     const count = st.yellowCount | 0;
-    const isRed = count >= 10;
+    const isRed = count >= 5;
     // Track yellows: after 10 yellows, spawn one red and reset
     st.yellowCount = isRed ? 0 : count + 1;
 

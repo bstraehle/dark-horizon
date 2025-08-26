@@ -57,9 +57,10 @@ export class Asteroid {
     const radius = this.width / 2;
     // Use a slightly darker rock body for indestructible; blue shield/pulse are added below
     const palette = this.isIndestructible ? CONFIG.COLORS.ASTEROID_DARK : CONFIG.COLORS.ASTEROID;
-    // Resolve shield color once (used for impact ring only)
-    const shieldColor =
-      (CONFIG.COLORS.ASTEROID_HARD && CONFIG.COLORS.ASTEROID_HARD.SHIELD) || "#7fc3ff";
+    // Resolve shield color: indestructible asteroids use reddish shield
+    const shieldColor = this.isIndestructible
+      ? (CONFIG.COLORS.ASTEROID_DARK && CONFIG.COLORS.ASTEROID_DARK.SHIELD) || "#FF2400"
+      : (CONFIG.COLORS.ASTEROID_HARD && CONFIG.COLORS.ASTEROID_HARD.SHIELD) || "#7fc3ff";
     const asteroidGradient = ctx.createRadialGradient(
       centerX - radius * 0.3,
       centerY - radius * 0.3,
