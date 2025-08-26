@@ -10,12 +10,10 @@ export class EventBus {
 
   /**
    * Subscribe a handler to an event type.
-   * @template T
    * @param {import('../types.js').GameEvent} type
-   * @param {(payload: T)=>void} handler
+   * @param {(payload: any)=>void} handler
    * @returns {()=>void} Unsubscribe function
    */
-  /** @template {import('../types.js').GameEvent} K */
   on(type, handler) {
     let set = this._map.get(type);
     if (!set) {
@@ -28,12 +26,10 @@ export class EventBus {
 
   /**
    * Unsubscribe a handler from an event type.
-   * @template T
    * @param {import('../types.js').GameEvent} type
-   * @param {(payload: T)=>void} handler
+   * @param {(payload: any)=>void} handler
    * @returns {void}
    */
-  /** @template {import('../types.js').GameEvent} K */
   off(type, handler) {
     const set = this._map.get(type);
     if (!set) return;
@@ -43,12 +39,10 @@ export class EventBus {
 
   /**
    * Emit an event to all subscribed handlers.
-   * @template T
    * @param {import('../types.js').GameEvent} type
-   * @param {T} payload
+   * @param {any} payload
    * @returns {void}
    */
-  /** @template {import('../types.js').GameEvent} K */
   emit(type, payload) {
     const set = this._map.get(type);
     if (!set || set.size === 0) return;

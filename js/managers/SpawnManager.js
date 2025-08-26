@@ -45,6 +45,30 @@ import { Star } from "../entities/Star.js";
  * where `lambda` is the per-second spawn rate from CONFIG.
  */
 export class SpawnManager {
+  /** @type {WeakMap<object, { yellowCount:number, normalAsteroidCount:number }>} */
+  static #STATE = new WeakMap();
+
+  /**
+   * Get or create per-game spawn counters.
+   * @param {object} game
+   */
+  static #state(game) {
+    let st = this.#STATE.get(game);
+    if (!st) {
+      st = { yellowCount: 0, normalAsteroidCount: 0 };
+      this.#STATE.set(game, st);
+    }
+    return st;
+  }
+
+  /**
+   * Reset spawn counters for the given game instance.
+   * Safe to call at start/reset.
+   * @param {object} game
+   */
+  static reset(game) {
+    this.#STATE.delete(game);
+  }
   /**
    * Randomly spawn asteroids and collectible stars.
    * @param {SpawnGameSlice} game - Minimal game slice.
@@ -67,6 +91,7 @@ export class SpawnManager {
    */
   static createAsteroid(game) {
     const rng = game.rng;
+    const st = this.#state(game);
     const width = CONFIG.ASTEROID.MIN_SIZE + rng.nextFloat() * CONFIG.ASTEROID.SIZE_VARIATION;
     const height = CONFIG.ASTEROID.MIN_SIZE + rng.nextFloat() * CONFIG.ASTEROID.SIZE_VARIATION;
     const speed = game.asteroidSpeed + rng.nextFloat() * CONFIG.ASTEROID.SPEED_VARIATION;
@@ -74,10 +99,9 @@ export class SpawnManager {
     const maxX = Math.max(minX, game.view.width - width - CONFIG.ASTEROID.HORIZONTAL_MARGIN / 2);
     const x = minX + rng.nextFloat() * (maxX - minX);
     // Every 11th asteroid (after 10 normals) is indestructible
-    const count = (game._normalAsteroidCount = game._normalAsteroidCount | 0);
+    const count = st.normalAsteroidCount | 0;
     const isIndestructible = count >= 10;
-    if (isIndestructible) game._normalAsteroidCount = 0;
-    else game._normalAsteroidCount = count + 1;
+    st.normalAsteroidCount = isIndestructible ? 0 : count + 1;
     return game.asteroidPool
       ? game.asteroidPool.acquire(
           x,
@@ -98,6 +122,7 @@ export class SpawnManager {
    */
   static createStar(game) {
     const rng = game.rng;
+    const st = this.#state(game);
     const size = CONFIG.STAR.MIN_SIZE + rng.nextFloat() * CONFIG.STAR.SIZE_VARIATION;
     const width = size;
     const height = size;
@@ -107,11 +132,10 @@ export class SpawnManager {
     const x = minX + rng.nextFloat() * (maxX - minX);
     // Determine if this star should be a red bonus star
     // We spawn 1 red for every 10 yellow stars. Use a simple counter on the game object.
-    const count = (game._yellowStarCount = game._yellowStarCount | 0);
+    const count = st.yellowCount | 0;
     const isRed = count >= 10;
     // Track yellows: after 10 yellows, spawn one red and reset
-    if (isRed) game._yellowStarCount = 0;
-    else game._yellowStarCount = count + 1;
+    st.yellowCount = isRed ? 0 : count + 1;
 
     return game.starPool
       ? game.starPool.acquire(x, CONFIG.STAR.SPAWN_Y, width, height, speed, isRed)

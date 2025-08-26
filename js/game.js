@@ -56,6 +56,10 @@ import { EventHandlers } from "./systems/EventHandlers.js";
 /** @implements {Partial<GameState>} */
 class DarkHorizon {
   /**
+   * Precomputed set of all pause/confirm codes for quick lookup.
+   */
+  static PAUSE_CONFIRM_CODES = new Set([...CONFIG.INPUT.PAUSE_CODES]);
+  /**
    * Initialize game state and UI elements.
    * Sets up UI, game variables, and event listeners.
    */
@@ -136,10 +140,6 @@ class DarkHorizon {
     this.explosions = [];
     this.particles = [];
     this.stars = [];
-    /** Track consecutive yellow stars spawned to insert red bonus ones */
-    this._yellowStarCount = 0;
-    /** Track normals to insert an indestructible asteroid after 10 normals */
-    this._normalAsteroidCount = 0;
 
     this.bulletPool = new ObjectPool(
       (x, y, w, h, speed) => new Bullet(x, y, w, h, speed),
@@ -238,10 +238,6 @@ class DarkHorizon {
     this.handleResize = this.handleResize.bind(this);
     this.handleStartScreenFocusGuard = this.handleStartScreenFocusGuard.bind(this);
     this.handleGameOverFocusGuard = this.handleGameOverFocusGuard.bind(this);
-    this.ensureOverlayFocus = this.ensureOverlayFocus.bind(this);
-    this.handleWindowFocus = this.handleWindowFocus.bind(this);
-    this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
-    this.handleDocumentFocusIn = this.handleDocumentFocusIn.bind(this);
     this.handlePauseKeyDown = this.handlePauseKeyDown.bind(this);
     this.shouldTogglePause = this.shouldTogglePause.bind(this);
     this.handleScroll = this.handleScroll.bind(this);
@@ -276,9 +272,28 @@ class DarkHorizon {
         handleRestartKeyDown: this.handleRestartKeyDown,
         handleStartScreenFocusGuard: this.handleStartScreenFocusGuard,
         handleGameOverFocusGuard: this.handleGameOverFocusGuard,
-        handleWindowFocus: this.handleWindowFocus,
-        handleVisibilityChange: this.handleVisibilityChange,
-        handleDocumentFocusIn: this.handleDocumentFocusIn,
+        handleWindowFocus: () =>
+          UIManager.handleWindowFocus(
+            this.gameInfo,
+            this.startBtn,
+            this.gameOverScreen,
+            this.restartBtn
+          ),
+        handleVisibilityChange: () =>
+          UIManager.handleVisibilityChange(
+            this.gameInfo,
+            this.startBtn,
+            this.gameOverScreen,
+            this.restartBtn
+          ),
+        handleDocumentFocusIn: (e) =>
+          UIManager.handleDocumentFocusIn(
+            e,
+            this.gameInfo,
+            this.startBtn,
+            this.gameOverScreen,
+            this.restartBtn
+          ),
         handleScroll: this.handleScroll,
         handlePauseKeyDown: this.handlePauseKeyDown,
       }
@@ -303,11 +318,14 @@ class DarkHorizon {
   shouldTogglePause(e) {
     if (!this.state.isRunning() && !this.state.isPaused()) return false;
     if (e.repeat) return false;
-    const isPauseKey =
-      CONFIG.INPUT.PAUSE_CODES.includes(e.code) || CONFIG.INPUT.PAUSE_KEYS.includes(e.key);
-    const isConfirmWhilePaused =
-      this.state.isPaused() && CONFIG.INPUT.CONFIRM_CODES.includes(e.code);
-    return isPauseKey || isConfirmWhilePaused;
+    const codeOrKey = e.code || e.key;
+    const isPauseOrConfirm = DarkHorizon.PAUSE_CONFIRM_CODES.has(codeOrKey);
+    // Only allow confirm keys to resume if paused
+    if (this.state.isPaused()) {
+      return isPauseOrConfirm;
+    }
+    // Otherwise, allow pause keys/codes to pause
+    return isPauseOrConfirm;
   }
 
   /**
@@ -332,47 +350,6 @@ class DarkHorizon {
    * Ensure the correct overlay button is focused if an overlay is visible.
    * Useful when the user switches tabs/apps and returns.
    */
-  ensureOverlayFocus() {
-    UIManager.ensureOverlayFocus(
-      this.gameInfo,
-      this.startBtn,
-      this.gameOverScreen,
-      this.restartBtn
-    );
-  }
-
-  /**
-   * When window/tab gains focus (or pageshow fires), restore overlay focus.
-   */
-  handleWindowFocus() {
-    UIManager.handleWindowFocus(this.gameInfo, this.startBtn, this.gameOverScreen, this.restartBtn);
-  }
-
-  /**
-   * When document becomes visible again, restore overlay focus.
-   */
-  handleVisibilityChange() {
-    UIManager.handleVisibilityChange(
-      this.gameInfo,
-      this.startBtn,
-      this.gameOverScreen,
-      this.restartBtn
-    );
-  }
-
-  /**
-   * Document-level focusin to re-focus overlay button if focus is lost (mobile app switch/back).
-   * @param {FocusEvent} e
-   */
-  handleDocumentFocusIn(e) {
-    UIManager.handleDocumentFocusIn(
-      e,
-      this.gameInfo,
-      this.startBtn,
-      this.gameOverScreen,
-      this.restartBtn
-    );
-  }
 
   /**
    * Update cached canvas bounding rect (used for touch offset calculations).
@@ -498,7 +475,7 @@ class DarkHorizon {
    * @param {KeyboardEvent} e - The keyboard event.
    */
   handleStartKeyDown(e) {
-    if (CONFIG.INPUT.CONFIRM_CODES.includes(e.code)) {
+    if (DarkHorizon.PAUSE_CONFIRM_CODES.has(e.code)) {
       e.preventDefault();
       this.startGame();
       this.startBtn.focus();
@@ -510,7 +487,7 @@ class DarkHorizon {
    * @param {KeyboardEvent} e - The keyboard event.
    */
   handleRestartKeyDown(e) {
-    if (CONFIG.INPUT.CONFIRM_CODES.includes(e.code)) {
+    if (DarkHorizon.PAUSE_CONFIRM_CODES.has(e.code)) {
       e.preventDefault();
       this.hideGameOver();
       this.startGame();
@@ -585,8 +562,8 @@ class DarkHorizon {
     this.stars = [];
     this.fireLimiter.reset();
     this.input.fireHeld = false;
-    this._yellowStarCount = 0;
-    this._normalAsteroidCount = 0;
+    // Reset spawn cadence counters managed by SpawnManager
+    SpawnManager.reset(this);
   }
 
   /**
@@ -841,14 +818,7 @@ class DarkHorizon {
    * Kept separate to avoid duplication between paused and running states.
    */
   drawFrame() {
-    this.drawBackground();
-    this.drawAsteroids();
-    this.drawBullets();
-    this.drawCollectibleStars();
-    this.drawExplosions();
-    this.drawParticles();
-    this.player.draw(this.ctx);
-    this.engineTrail.draw(this.ctx);
+    RenderManager.draw(this);
   }
 
   /** Draw the pause message above everything else. */

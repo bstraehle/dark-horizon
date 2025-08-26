@@ -73,7 +73,7 @@ export class Nebula {
         );
       const blobs = Array.from({ length: blobCount }, () => {
         const dist = rand.nextFloat() * baseR * 0.6;
-        const ang = rand.nextFloat() * Math.PI * 2;
+        const ang = rand.nextFloat() * CONFIG.TWO_PI;
         const r =
           baseR *
           (CONFIG.NEBULA.BLOB_MIN_FACTOR + rand.nextFloat() * CONFIG.NEBULA.BLOB_VAR_FACTOR);
@@ -85,7 +85,7 @@ export class Nebula {
           ox: 0,
           oy: 0,
           r,
-          rot: rand.nextFloat() * Math.PI * 2,
+          rot: rand.nextFloat() * CONFIG.TWO_PI,
           sx,
           sy,
           wobbleAmp: CONFIG.NEBULA.WOBBLE_AMP_MIN + rand.nextFloat() * CONFIG.NEBULA.WOBBLE_AMP_VAR,

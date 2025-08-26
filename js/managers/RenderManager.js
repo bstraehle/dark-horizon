@@ -1,13 +1,8 @@
 import { CONFIG } from "../constants.js";
-
-/**
- * RenderManager centralizes drawing routines for game entities.
- */
 export class RenderManager {
   /**
-   * Draw all asteroids.
    * @param {CanvasRenderingContext2D} ctx
-   * @param {Array<{ draw:(ctx:CanvasRenderingContext2D)=>void }>} asteroids
+   * @param {any[]} asteroids
    */
   static drawAsteroids(ctx, asteroids) {
     for (let i = 0; i < asteroids.length; i++) {
@@ -16,10 +11,9 @@ export class RenderManager {
   }
 
   /**
-   * Draw all bullets with optional sprite/trail.
    * @param {CanvasRenderingContext2D} ctx
-   * @param {Array<{ x:number, y:number, width:number, height:number, draw:(ctx:CanvasRenderingContext2D)=>void }>} bullets
-   * @param {Partial<import('../types.js').SpriteAtlas>} [sprites]
+   * @param {any[]} bullets
+   * @param {any} sprites
    */
   static drawBullets(ctx, bullets, sprites) {
     const spr = sprites && sprites.bullet;
@@ -40,13 +34,12 @@ export class RenderManager {
   }
 
   /**
-   * Draw collectible stars with pulsing and glow effects if sprite available.
    * @param {CanvasRenderingContext2D} ctx
-   * @param {Array<{ x:number, y:number, width:number, height:number, draw:(ctx:CanvasRenderingContext2D, t:number)=>void }>} stars
-   * @param {number} [timeSec=0]
-   * @param {Partial<import('../types.js').SpriteAtlas>} [sprites]
+   * @param {any[]} stars
+   * @param {number} [timeSec]
+   * @param {any} sprites
    */
-  static drawCollectibleStars(ctx, stars, timeSec = 0, sprites) {
+  static drawCollectibleStars(ctx, stars, sprites, timeSec = 0) {
     const starSpr = sprites && sprites.star;
     const starRedSpr = sprites && /** @type {any} */ (sprites).starRed;
     const base = sprites && sprites.starBaseSize;
@@ -59,7 +52,7 @@ export class RenderManager {
         if (CONFIG.STAR.PULSE) {
           const amp = CONFIG.STAR.PULSE_AMPLITUDE;
           const speedHz = CONFIG.STAR.PULSE_SPEED;
-          const pulse = Math.sin(timeSec * speedHz * Math.PI * 2) * amp + (1 - amp);
+          const pulse = Math.sin(timeSec * speedHz * CONFIG.TWO_PI) * amp + (1 - amp);
           dw = baseSize * pulse;
           dh = baseSize * pulse;
         }
@@ -76,9 +69,8 @@ export class RenderManager {
   }
 
   /**
-   * Draw explosion effects.
    * @param {CanvasRenderingContext2D} ctx
-   * @param {Array<{ draw:(ctx:CanvasRenderingContext2D)=>void }>} explosions
+   * @param {any[]} explosions
    */
   static drawExplosions(ctx, explosions) {
     for (let i = 0; i < explosions.length; i++) {
@@ -87,14 +79,37 @@ export class RenderManager {
   }
 
   /**
-   * Draw all particles; resets alpha at the end.
    * @param {CanvasRenderingContext2D} ctx
-   * @param {Array<{ draw:(ctx:CanvasRenderingContext2D)=>void }>} particles
+   * @param {any[]} particles
    */
   static drawParticles(ctx, particles) {
     for (let i = 0; i < particles.length; i++) {
       particles[i].draw(ctx);
     }
     ctx.globalAlpha = 1;
+  }
+
+  /**
+   * Draw the entire game frame in the correct order.
+   * @param {any} game
+   */
+  static draw(game) {
+    // Draw background
+    if (typeof game.drawBackground === "function") {
+      game.drawBackground();
+    }
+    // Draw entities
+    RenderManager.drawAsteroids(game.ctx, game.asteroids);
+    RenderManager.drawBullets(game.ctx, game.bullets, game.sprites);
+    RenderManager.drawCollectibleStars(game.ctx, game.stars, game.sprites, game.timeSec);
+    RenderManager.drawExplosions(game.ctx, game.explosions);
+    RenderManager.drawParticles(game.ctx, game.particles);
+    // Draw player and engine trail
+    if (game.player && typeof game.player.draw === "function") {
+      game.player.draw(game.ctx);
+    }
+    if (game.engineTrail && typeof game.engineTrail.draw === "function") {
+      game.engineTrail.draw(game.ctx);
+    }
   }
 }

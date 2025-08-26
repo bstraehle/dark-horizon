@@ -107,6 +107,7 @@ const COLORS = deepFreeze({
 });
 
 export const CONFIG = deepFreeze({
+  TWO_PI: Math.PI * 2,
   VIEW: {
     DPR_MIN: 1,
     DPR_MAX: 3,
@@ -160,7 +161,7 @@ export const CONFIG = deepFreeze({
     STAR_SPAWN_RATE: 1.0,
   },
   INPUT: {
-    CONFIRM_CODES: ["Enter", "Space"].sort(),
+    CONFIRM_CODES: ["Enter"].sort(),
     FIRE_CODES: ["Space"].sort(),
     MOVEMENT_CODES: [
       "ArrowDown",

@@ -3,6 +3,7 @@
 // Module-scoped array pool to reduce GC churn for spatial grid buckets
 /** @type {any[][]} */
 const ARR_POOL = [];
+const ARR_POOL_MAX = 256;
 
 /**
  * @typedef {Object} BulletHitAsteroidPayload
@@ -30,17 +31,21 @@ export class CollisionManager {
    * @private
    */
   static _getArr() {
-    return ARR_POOL.length > 0 ? ARR_POOL.pop() : [];
+    const arr = ARR_POOL.length > 0 ? ARR_POOL.pop() : undefined;
+    return arr !== undefined ? arr : [];
   }
 
-  /** Return an array to the pool after clearing it.
+  /** Return an array to the pool after clearing it, up to ARR_POOL_MAX.
    * @param {any[]} arr
    * @returns {void}
    * @private
    */
   static _releaseArr(arr) {
     arr.length = 0;
-    ARR_POOL.push(arr);
+    if (ARR_POOL.length < ARR_POOL_MAX) {
+      ARR_POOL.push(arr);
+    }
+    // else drop the array for GC
   }
   /**
    * Axis-aligned bounding box collision detection (strict AABB).
@@ -83,7 +88,12 @@ export class CollisionManager {
     /** @type {Map<string, any[]>} */
     const grid = new Map();
     const cs = game.cellSize | 0;
-    /** Put an asteroid into the grid cell (cx, cy). */
+    /**
+     * Put an asteroid into the grid cell (cx, cy).
+     * @param {number} ax
+     * @param {number} ay
+     * @param {any} a
+     */
     const put = (ax, ay, a) => {
       const key = ax + "," + ay;
       let arr = grid.get(key);

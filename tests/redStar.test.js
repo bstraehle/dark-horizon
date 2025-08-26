@@ -11,7 +11,6 @@ function makeGameForSpawn() {
     view: { width: 300, height: 300 },
     starSpeed: 50,
     starPool: null,
-    _yellowStarCount: 0,
   };
 }
 
