@@ -242,6 +242,8 @@ export const CONFIG = deepFreeze({
     HORIZONTAL_MARGIN: 20,
     MIN_SIZE: 15,
     SHADOW_BLUR: 15,
+    // Variation in spawned star speed (used as rng.range(0, SPEED_VARIATION))
+    SPEED_VARIATION: 30,
     PARTICLE_BURST: 12,
     PARTICLE_LIFE: 0.33,
     PARTICLE_SIZE_MIN: 1,

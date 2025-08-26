@@ -126,14 +126,17 @@ export class SpawnManager {
     const size = CONFIG.STAR.MIN_SIZE + rng.nextFloat() * CONFIG.STAR.SIZE_VARIATION;
     const width = size;
     const height = size;
-    const speed = game.starSpeed + rng.range(0, 30);
+    // rng.range may be unavailable on foreign RNGLike implementations; guard it.
+    const jitter = typeof rng.range === "function" ? rng.range(0, CONFIG.STAR.SPEED_VARIATION) : 0;
+    const speed = game.starSpeed + jitter;
     const minX = CONFIG.STAR.HORIZONTAL_MARGIN / 2;
     const maxX = Math.max(minX, game.view.width - width - CONFIG.STAR.HORIZONTAL_MARGIN / 2);
     const x = minX + rng.nextFloat() * (maxX - minX);
     // Determine if this star should be a red bonus star
     // We spawn 1 red for every 10 yellow stars. Use a simple counter on the game object.
     const count = st.yellowCount | 0;
-    const isRed = count >= 5;
+    // After 10 yellow stars, the next one should be red.
+    const isRed = count >= 10;
     // Track yellows: after 10 yellows, spawn one red and reset
     st.yellowCount = isRed ? 0 : count + 1;
 
