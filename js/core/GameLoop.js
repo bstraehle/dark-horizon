@@ -42,6 +42,9 @@ export class GameLoop {
     this._rafId = 0;
   }
 
+  /**
+   * @param {number} now
+   */
   _tick(now) {
     const frameDt = now - this._last;
     this._last = now;

@@ -135,10 +135,15 @@ class DarkHorizon {
     this.sprites = SpriteManager.createSprites();
     this.cellSize = CONFIG.ASTEROID.MIN_SIZE + CONFIG.ASTEROID.SIZE_VARIATION;
 
+    /** @type {Asteroid[]} */
     this.asteroids = [];
+    /** @type {Bullet[]} */
     this.bullets = [];
+    /** @type {Explosion[]} */
     this.explosions = [];
+    /** @type {any[]} */
     this.particles = [];
+    /** @type {Star[]} */
     this.stars = [];
 
     this.bulletPool = new ObjectPool(

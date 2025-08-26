@@ -274,6 +274,13 @@ export const CONFIG = deepFreeze({
 /** Tau-like constant: 2π */
 export const PI2 = Math.PI * 2;
 /** Clamp a number between (min, max). */
+/**
+ * Clamp a number between (min, max).
+ * @param {number} n
+ * @param {number} min
+ * @param {number} max
+ * @returns {number}
+ */
 export const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
 /**

@@ -5,6 +5,7 @@ import { CONFIG, PI2 } from "../constants.js";
  */
 export class EngineTrail {
   constructor() {
+    /** @type {Array<{x:number,y:number,life:number,maxLife:number,size:number}>} */
     this.particles = [];
   }
 
