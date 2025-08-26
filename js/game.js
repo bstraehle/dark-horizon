@@ -912,3 +912,17 @@ class DarkHorizon {
 window.addEventListener("load", () => {
   new DarkHorizon();
 });
+
+// Reload the page on window resize (debounced to avoid rapid reloads)
+(() => {
+  let reloadTimer = /** @type {any} */ (null);
+  const DEBOUNCE_MS = 250;
+  const onResize = () => {
+    if (reloadTimer) clearTimeout(reloadTimer);
+    reloadTimer = setTimeout(() => {
+      // Full reload to reinitialize layout/state for new viewport
+      window.location.reload();
+    }, DEBOUNCE_MS);
+  };
+  window.addEventListener("resize", onResize);
+})();
