@@ -36,8 +36,8 @@ export class RenderManager {
   /**
    * @param {CanvasRenderingContext2D} ctx
    * @param {any[]} stars
-   * @param {number} [timeSec]
    * @param {any} sprites
+   * @param {number} [timeSec]
    */
   static drawCollectibleStars(ctx, stars, sprites, timeSec = 0) {
     const starSpr = sprites && sprites.star;
