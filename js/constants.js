@@ -190,7 +190,7 @@ export const CONFIG = deepFreeze({
   },
   BULLET: {
     HEIGHT: 15,
-    SPAWN_OFFSET: -2,
+    SPAWN_OFFSET: 0,
     TRAIL: 10,
     WIDTH: 4,
     SHADOW_BLUR: 8,
