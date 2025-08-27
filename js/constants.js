@@ -20,12 +20,13 @@
  */
 const COLORS = deepFreeze({
   ASTEROID: {
-    CRATER: "#777777", // lighter gray (crater)
-    GRAD_IN: "#999999", // light gray (center)
-    GRAD_MID: "#666666", // medium gray (mid)
-    GRAD_OUT: "#333333", // dark gray (outer)
-    OUTLINE: "#666666", // subtle dark gray outline
-    RING: "#888888", // match crater color for unified look
+    // More realistic rocky asteroid tones: dusty light center, mid gray-brown, dark outer rim
+    CRATER: "#6b6b6b", // crater - cool gray
+    GRAD_IN: "#cfc9c0", // dusty, slightly warm center
+    GRAD_MID: "#8f8579", // stony gray-brown midtone
+    GRAD_OUT: "#3f3a36", // dark outer rim
+    OUTLINE: "#2f2b28", // deep outline for contrast
+    RING: "#7a7570", // subtle ring tone matching mid/crater
   },
   // Hard/indestructible asteroid variant (darker, higher contrast outline)
   ASTEROID_HARD: {
@@ -39,13 +40,14 @@ const COLORS = deepFreeze({
   },
   // Slightly darker than regular asteroid, used when shielded to keep core natural
   ASTEROID_DARK: {
-    CRATER: "#8B0000", // dark red
-    GRAD_IN: "#FF2400", // bright red (glow center)
-    GRAD_MID: "#B22222", // firebrick
-    GRAD_OUT: "#330000", // very dark red
-    OUTLINE: "#B22222", // orange-red outline
-    SHIELD: "#FF2400", // matching glow for shield
-    RING: "#8B0000", // match crater color for unified look
+    // Mars-like palette: rusty orange and brown tones
+    CRATER: "#6B3926", // dark brown (crater)
+    GRAD_IN: "#FF8C42", // bright rusty orange (center)
+    GRAD_MID: "#C1440E", // burnt orange / Mars red
+    GRAD_OUT: "#3C1A0E", // deep brown (outer)
+    OUTLINE: "#8B3E2F", // muted reddish-brown outline
+    SHIELD: "#FFBF8A", // warm orange glow for impacts
+    RING: "#6B3926", // match crater color for unified look
   },
   BACKGROUND: {
     BOTTOM: "#444",
@@ -97,10 +99,11 @@ const COLORS = deepFreeze({
   },
   // Red bonus star palette
   STAR_RED: {
-    BASE: "#d80000", // deep saturated red
-    GRAD_IN: "#ffcccc", // pale red for inner glow
-    GRAD_MID: "#dd2a2a", // strong red for mid
-    GRAD_OUT: "#b20000", // very deep red for outer edge
+    // Match the STAR shading (white inner, bright base/mid, darker outer) but in red
+    BASE: "#ff3333", // bright red base (analogous to #ffd700 for yellow)
+    GRAD_IN: "#ffffff", // white inner glow (same as regular stars)
+    GRAD_MID: "#ff3333", // mid tone matches base for strong glow
+    GRAD_OUT: "#b20000", // deep red for outer edge
   },
   UI: {
     OVERLAY_BACKDROP: "rgba(0,0,0,0.5)",
