@@ -44,8 +44,17 @@ import { Star } from "../entities/Star.js";
  *   p(spawn in dt) = 1 - exp(-lambda * dt)
  * where `lambda` is the per-second spawn rate from CONFIG.
  */
+/**
+ * Per-game spawn state:
+ * @typedef {{
+ *   yellowCount: number,
+ *   normalAsteroidCount: number,
+ *   planetIndex: number,
+ *   planetUsed: Set<number>
+ * }} SpawnState
+ */
 export class SpawnManager {
-  /** @type {WeakMap<object, { yellowCount:number, normalAsteroidCount:number }>} */
+  /** @type {WeakMap<object, SpawnState>} */
   static #STATE = new WeakMap();
 
   /**
@@ -55,7 +64,11 @@ export class SpawnManager {
   static #state(game) {
     let st = this.#STATE.get(game);
     if (!st) {
-      st = { yellowCount: 0, normalAsteroidCount: 0 };
+      // normalAsteroidCount: cadence counter for indestructible spawns
+      // yellowCount: cadence counter for red stars
+      // planetIndex: next index in ASTEROID_PLANETS to use
+      // planetUsed: Set<number> indexes used in current cycle
+      st = { yellowCount: 0, normalAsteroidCount: 0, planetIndex: 0, planetUsed: new Set() };
       this.#STATE.set(game, st);
     }
     return st;
@@ -91,7 +104,7 @@ export class SpawnManager {
    */
   static createAsteroid(game) {
     const rng = game.rng;
-    const st = this.#state(game);
+    const st = /** @type {any} */ (this.#state(game));
     // Determine indestructible asteroid cadence from config before selecting sizes
     const asteroidThreshold = CONFIG.GAME.ASTEROID_NORMAL_BEFORE_INDESTRUCTIBLE | 0 || 10;
     const count = st.normalAsteroidCount | 0;
@@ -109,6 +122,33 @@ export class SpawnManager {
     const minX = CONFIG.ASTEROID.HORIZONTAL_MARGIN / 2;
     const maxX = Math.max(minX, game.view.width - width - CONFIG.ASTEROID.HORIZONTAL_MARGIN / 2);
     const x = minX + rng.nextFloat() * (maxX - minX);
+    // If this is an indestructible asteroid, pick the next planet palette in a sequential
+    // non-repeating cycle per game instance. We track usage with a bitmask and an index.
+    let paletteOverride = null;
+    if (isIndestructible) {
+      const planets = CONFIG.COLORS.ASTEROID_PLANETS;
+      if (Array.isArray(planets) && planets.length > 0) {
+        const n = planets.length;
+        // If all used in this cycle, reset the set
+        if ((st.planetUsed.size || 0) >= n) st.planetUsed.clear();
+
+        // Find next unused starting from planetIndex
+        let idx = st.planetIndex | 0;
+        for (let i = 0; i < n; i++) {
+          const j = (idx + i) % n;
+          if (!st.planetUsed.has(j)) {
+            idx = j;
+            break;
+          }
+        }
+        paletteOverride = planets[idx];
+        // Mark used
+        st.planetUsed.add(idx);
+        // Advance planetIndex for next time
+        st.planetIndex = (idx + 1) % n;
+      }
+    }
+
     return game.asteroidPool
       ? game.asteroidPool.acquire(
           x,
@@ -117,9 +157,19 @@ export class SpawnManager {
           height,
           speed,
           rng,
-          isIndestructible
+          isIndestructible,
+          paletteOverride
         )
-      : new Asteroid(x, CONFIG.ASTEROID.SPAWN_Y, width, height, speed, rng, isIndestructible);
+      : new Asteroid(
+          x,
+          CONFIG.ASTEROID.SPAWN_Y,
+          width,
+          height,
+          speed,
+          rng,
+          isIndestructible,
+          paletteOverride
+        );
   }
 
   /**
@@ -129,7 +179,7 @@ export class SpawnManager {
    */
   static createStar(game) {
     const rng = game.rng;
-    const st = this.#state(game);
+    const st = /** @type {any} */ (this.#state(game));
     const size = CONFIG.STAR.MIN_SIZE + rng.nextFloat() * CONFIG.STAR.SIZE_VARIATION;
     const width = size;
     const height = size;

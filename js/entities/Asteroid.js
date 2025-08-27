@@ -14,7 +14,7 @@ export class Asteroid {
    * @param {import('../types.js').RNGLike} [rng] - Optional RNG for crater placement.
    * @param {boolean} [isIndestructible=false] - If true, this asteroid cannot be destroyed by bullets.
    */
-  constructor(x, y, width, height, speed, rng, isIndestructible = false) {
+  constructor(x, y, width, height, speed, rng, isIndestructible = false, paletteOverride = null) {
     this.x = x;
     this.y = y;
     this.width = width;
@@ -38,14 +38,19 @@ export class Asteroid {
     // Choose and store a visual palette once so the asteroid doesn't flicker between draws
     this._palette = CONFIG.COLORS.ASTEROID;
     if (this.isIndestructible) {
-      const planets = CONFIG.COLORS.ASTEROID_PLANETS;
-      if (Array.isArray(planets) && planets.length > 0) {
-        const idx = this._rng
-          ? Math.floor(this._rng.nextFloat() * planets.length)
-          : Math.floor(Math.random() * planets.length);
-        this._palette = planets[idx];
+      // If a palette override was provided (from SpawnManager), prefer it.
+      if (paletteOverride && typeof paletteOverride === "object") {
+        this._palette = paletteOverride;
       } else {
-        this._palette = CONFIG.COLORS.ASTEROID_DARK || CONFIG.COLORS.ASTEROID;
+        const planets = CONFIG.COLORS.ASTEROID_PLANETS;
+        if (Array.isArray(planets) && planets.length > 0) {
+          const idx = this._rng
+            ? Math.floor(this._rng.nextFloat() * planets.length)
+            : Math.floor(Math.random() * planets.length);
+          this._palette = planets[idx];
+        } else {
+          this._palette = CONFIG.COLORS.ASTEROID_DARK || CONFIG.COLORS.ASTEROID;
+        }
       }
     }
     // Apply palette-specific speed factor if present, otherwise default to provided speed
@@ -141,7 +146,7 @@ export class Asteroid {
    * @param {import('../types.js').RNGLike} [rng]
    * @param {boolean} [isIndestructible=false]
    */
-  reset(x, y, width, height, speed, rng, isIndestructible = false) {
+  reset(x, y, width, height, speed, rng, isIndestructible = false, paletteOverride = null) {
     this.x = x;
     this.y = y;
     this.width = width;
@@ -163,14 +168,18 @@ export class Asteroid {
     // Recompute and store palette for this asteroid instance
     this._palette = CONFIG.COLORS.ASTEROID;
     if (this.isIndestructible) {
-      const planets = CONFIG.COLORS.ASTEROID_PLANETS;
-      if (Array.isArray(planets) && planets.length > 0) {
-        const idx = this._rng
-          ? Math.floor(this._rng.nextFloat() * planets.length)
-          : Math.floor(Math.random() * planets.length);
-        this._palette = planets[idx];
+      if (paletteOverride && typeof paletteOverride === "object") {
+        this._palette = paletteOverride;
       } else {
-        this._palette = CONFIG.COLORS.ASTEROID_DARK || CONFIG.COLORS.ASTEROID;
+        const planets = CONFIG.COLORS.ASTEROID_PLANETS;
+        if (Array.isArray(planets) && planets.length > 0) {
+          const idx = this._rng
+            ? Math.floor(this._rng.nextFloat() * planets.length)
+            : Math.floor(Math.random() * planets.length);
+          this._palette = planets[idx];
+        } else {
+          this._palette = CONFIG.COLORS.ASTEROID_DARK || CONFIG.COLORS.ASTEROID;
+        }
       }
     }
     const paletteSpeedFactor =

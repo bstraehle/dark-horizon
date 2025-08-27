@@ -158,8 +158,8 @@ class DarkHorizon {
       { maxSize: 4096 }
     );
     this.asteroidPool = new ObjectPool(
-      (x, y, w, h, speed, rng, isIndestructible = false) =>
-        new Asteroid(x, y, w, h, speed, rng, isIndestructible),
+      (x, y, w, h, speed, rng, isIndestructible = false, paletteOverride = null) =>
+        new Asteroid(x, y, w, h, speed, rng, isIndestructible, paletteOverride),
       undefined,
       { maxSize: 256 }
     );
