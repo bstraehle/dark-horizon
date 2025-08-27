@@ -545,7 +545,16 @@ class DarkHorizon {
         (prevWidth < BREAKPOINT && newWidth >= BREAKPOINT) ||
         (prevWidth >= BREAKPOINT && newWidth < BREAKPOINT);
 
-      if (currentlyMobile !== this._isMobile || crossedBreakpoint) {
+      // If platform hint changed, layout breakpoint crossed, or we're on
+      // mobile and the user is currently at Game Over, perform a full
+      // reset so the start/menu overlay ("Launch Mission") is shown.
+      // This keeps mobile behavior consistent with desktop where a
+      // layout/platform change returns the UI to the initial menu.
+      if (
+        currentlyMobile !== this._isMobile ||
+        crossedBreakpoint ||
+        (currentlyMobile && this.state.isGameOver())
+      ) {
         this.fullReset();
       }
       // Ensure nebula is not shown after a plain resize (match initial load)
