@@ -529,13 +529,204 @@ class DarkHorizon {
     this._resizeScheduled = true;
     requestAnimationFrame(() => {
       this._resizeScheduled = false;
+      // Recompute size first
+      const prevWidth = this.view.width || 0;
       this.resizeCanvas();
+
+      // Detect platform (mobile/desktop) change and perform a full reset when
+      // either the `isMobile()` heuristic toggles or the layout crosses a
+      // desktop/mobile width breakpoint (e.g. 768px). Some browsers don't
+      // change UA/hints during resizes, so breakpoint detection is a pragmatic
+      // fallback.
+      const currentlyMobile = this.isMobile();
+      const newWidth = this.view.width || 0;
+      const BREAKPOINT = 768;
+      const crossedBreakpoint =
+        (prevWidth < BREAKPOINT && newWidth >= BREAKPOINT) ||
+        (prevWidth >= BREAKPOINT && newWidth < BREAKPOINT);
+
+      if (currentlyMobile !== this._isMobile || crossedBreakpoint) {
+        this.fullReset();
+      }
+      // Ensure nebula is not shown after a plain resize (match initial load)
+      // Some flows (fullReset) may force-generate a nebula; a normal resize
+      // should hide it and show the standard background like on page load.
+      try {
+        this.nebulaConfigs = undefined;
+      } catch (_e) {
+        /* ignore in non-DOM/test envs */
+        void 0;
+      }
+
+      // Recreate or redraw background to match new dimensions
       this.initBackground();
       if (this.state.isPaused()) this._pausedFrameRendered = false;
       if (!this.state.isRunning()) {
         this.drawBackground();
       }
     });
+  }
+
+  /**
+   * Soft reinitialize game parameters that depend on platform characteristics.
+   * Preserves dynamic game state (score, entities) while updating speeds, nebula counts, and
+   * other derived values so the game adapts cleanly to viewport/platform changes.
+   * @param {boolean} nowMobile
+   */
+  softReinitForPlatformChange(nowMobile) {
+    this._isMobile = nowMobile;
+    // Update speeds that depend on platform
+    this.asteroidSpeed = this._isMobile
+      ? CONFIG.SPEEDS.ASTEROID_MOBILE
+      : CONFIG.SPEEDS.ASTEROID_DESKTOP;
+    this.starSpeed = CONFIG.SPEEDS.STAR;
+
+    // Reset spawn counters so cadence aligns with new platform expectations
+    SpawnManager.reset(this);
+
+    // Re-warm pools for likely smaller/larger entities (cheap, optional)
+    try {
+      // warmup counts are heuristic and intentionally small to avoid jank
+      if (this.starPool && typeof this.starPool.warmUp === "function") {
+        this.starPool.warmUp(16, 0, 0, 0, 0, this.starSpeed, false);
+      }
+      if (this.asteroidPool && typeof this.asteroidPool.warmUp === "function") {
+        this.asteroidPool.warmUp(
+          8,
+          0,
+          0,
+          CONFIG.ASTEROID.MIN_SIZE,
+          CONFIG.ASTEROID.MIN_SIZE,
+          this.asteroidSpeed,
+          false
+        );
+      }
+    } catch (_e) {
+      // Ignore warmup failures - optional optimization
+      void 0;
+    }
+
+    // Recreate sprites if necessary for DPI/platform differences
+    if (SpriteManager && typeof SpriteManager.createSprites === "function") {
+      try {
+        this.sprites = SpriteManager.createSprites();
+      } catch (_e) {
+        // ignore
+        void 0;
+      }
+    }
+  }
+
+  /**
+   * Fully reset the game to initial (menu) state while preserving persistent data such
+   * as the saved high score. Useful to reinitialize after platform or layout changes.
+   * This clears dynamic entities, resets timers, resets spawn counters and pools,
+   * and re-evaluates platform-dependent parameters.
+   */
+  fullReset() {
+    // Stop the loop if running
+    if (this.loop) this.loop.stop();
+
+    // Release pooled entities back to pools
+    /**
+     * @param {Array<any>} arr
+     * @param {{ release: (obj: any) => void } | undefined} pool
+     */
+    const releaseAll = (arr, pool) => {
+      if (!arr || !pool) return;
+      for (const it of arr) pool.release(it);
+    };
+    releaseAll(this.asteroids, this.asteroidPool);
+    releaseAll(this.bullets, this.bulletPool);
+    releaseAll(this.explosions, this.explosionPool);
+    releaseAll(this.particles, this.particlePool);
+    releaseAll(this.stars, this.starPool);
+
+    // Clear runtime arrays
+    this.asteroids = [];
+    this.bullets = [];
+    this.explosions = [];
+    this.particles = [];
+    this.stars = [];
+
+    // Reset scores and timers
+    this.score = 0;
+    this.updateScore();
+    this.timeMs = 0;
+    this.timeSec = 0;
+    this.fireLimiter.reset();
+    this.input = new InputState();
+
+    // Reset spawn counters and RNG remains the same for reproducibility
+    SpawnManager.reset(this);
+
+    // Recompute platform flags and speeds
+    this._isMobile = this.isMobile();
+    this.asteroidSpeed = this._isMobile
+      ? CONFIG.SPEEDS.ASTEROID_MOBILE
+      : CONFIG.SPEEDS.ASTEROID_DESKTOP;
+    this.starSpeed = CONFIG.SPEEDS.STAR;
+
+    // Warm up pools again (best-effort)
+    this._warmUpPools();
+
+    // Recreate sprites and background to match fresh state
+    try {
+      this.sprites = SpriteManager.createSprites();
+    } catch (_e) {
+      // ignore in tests/non-DOM
+      void 0;
+    }
+    this.initBackground();
+    this.drawBackground();
+
+    // Ensure UI overlays are reset: hide game over / pause, show start/info overlay
+    try {
+      UIManager.hideGameOver(this.gameOverScreen);
+      UIManager.hidePause(this.pauseScreen);
+      if (this.gameInfo && this.gameInfo.classList.contains("hidden")) {
+        this.gameInfo.classList.remove("hidden");
+      }
+    } catch (_e) {
+      // ignore in non-DOM environments
+      void 0;
+    }
+
+    // Force-generate nebula for the start screen so background looks fresh even when not running
+    try {
+      const bg = BackgroundManager.init({
+        view: this.view,
+        running: true,
+        isMobile: this._isMobile,
+        rng: this.rng,
+      });
+      if (bg && bg.nebulaConfigs) this.nebulaConfigs = bg.nebulaConfigs;
+      this.starField = bg && bg.starField ? bg.starField : this.starField;
+    } catch (_e) {
+      // ignore in tests/non-DOM
+      void 0;
+    }
+
+    // Focus the Launch Mission / Start button for accessibility and immediate keyboard usage
+    try {
+      UIManager.focusWithRetry(this.startBtn);
+    } catch (_e) {
+      // ignore in non-DOM environments
+      void 0;
+    }
+
+    // Reset FSM to menu
+    this.state = new GameStateMachine();
+
+    // Re-register event handlers to ensure no duplicates
+    if (this._unsubscribeEvents) {
+      try {
+        this._unsubscribeEvents();
+      } catch (_e) {
+        void _e;
+      }
+    }
+    this._unsubscribeEvents = EventHandlers.register(this);
   }
 
   /**
@@ -894,20 +1085,8 @@ class DarkHorizon {
   }
 }
 
+export { DarkHorizon };
+
 window.addEventListener("load", () => {
   new DarkHorizon();
 });
-
-// Reload the page on window resize (debounced to avoid rapid reloads)
-(() => {
-  let reloadTimer = /** @type {any} */ (null);
-  const DEBOUNCE_MS = 250;
-  const onResize = () => {
-    if (reloadTimer) clearTimeout(reloadTimer);
-    reloadTimer = setTimeout(() => {
-      // Full reload to reinitialize layout/state for new viewport
-      window.location.reload();
-    }, DEBOUNCE_MS);
-  };
-  window.addEventListener("resize", onResize);
-})();
