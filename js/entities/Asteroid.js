@@ -28,11 +28,32 @@ export class Asteroid {
     const craterCount = 3;
     const rand =
       rng && typeof rng.nextFloat === "function" ? rng : { nextFloat: Math.random.bind(Math) };
+    // Keep a reference to the provided RNG (if any) so drawing can deterministically pick planet palettes
+    this._rng = rng && typeof rng.nextFloat === "function" ? rng : null;
     this._craters = Array.from({ length: craterCount }, () => ({
       dx: (rand.nextFloat() - 0.5) * radius * 0.8,
       dy: (rand.nextFloat() - 0.5) * radius * 0.8,
       r: rand.nextFloat() * radius * 0.3 + 2,
     }));
+    // Choose and store a visual palette once so the asteroid doesn't flicker between draws
+    this._palette = CONFIG.COLORS.ASTEROID;
+    if (this.isIndestructible) {
+      const planets = CONFIG.COLORS.ASTEROID_PLANETS;
+      if (Array.isArray(planets) && planets.length > 0) {
+        const idx = this._rng
+          ? Math.floor(this._rng.nextFloat() * planets.length)
+          : Math.floor(Math.random() * planets.length);
+        this._palette = planets[idx];
+      } else {
+        this._palette = CONFIG.COLORS.ASTEROID_DARK || CONFIG.COLORS.ASTEROID;
+      }
+    }
+    // Apply palette-specific speed factor if present, otherwise default to provided speed
+    const paletteSpeedFactor =
+      this._palette && typeof this._palette.SPEED_FACTOR === "number"
+        ? this._palette.SPEED_FACTOR
+        : null;
+    this.speed = paletteSpeedFactor ? speed * paletteSpeedFactor : speed;
   }
 
   /**
@@ -55,12 +76,12 @@ export class Asteroid {
     const centerX = this.x + this.width / 2;
     const centerY = this.y + this.height / 2;
     const radius = this.width / 2;
-    // Use a slightly darker rock body for indestructible; blue shield/pulse are added below
-    const palette = this.isIndestructible ? CONFIG.COLORS.ASTEROID_DARK : CONFIG.COLORS.ASTEROID;
-    // Resolve shield color: indestructible asteroids use reddish shield
-    const shieldColor = this.isIndestructible
-      ? (CONFIG.COLORS.ASTEROID_DARK && CONFIG.COLORS.ASTEROID_DARK.SHIELD) || "#FF2400"
-      : (CONFIG.COLORS.ASTEROID_HARD && CONFIG.COLORS.ASTEROID_HARD.SHIELD) || "#7fc3ff";
+    // Use the stored palette (chosen at creation/reset) to keep consistent look per asteroid
+    const palette = this._palette || CONFIG.COLORS.ASTEROID;
+    const shieldColor =
+      (palette && palette.SHIELD) ||
+      (CONFIG.COLORS.ASTEROID_HARD && CONFIG.COLORS.ASTEROID_HARD.SHIELD) ||
+      "#7fc3ff";
     const asteroidGradient = ctx.createRadialGradient(
       centerX - radius * 0.3,
       centerY - radius * 0.3,
@@ -132,11 +153,31 @@ export class Asteroid {
     const craterCount = 3;
     const rand =
       rng && typeof rng.nextFloat === "function" ? rng : { nextFloat: Math.random.bind(Math) };
+    // Keep a reference to the provided RNG (if any) so drawing can deterministically pick planet palettes
+    this._rng = rng && typeof rng.nextFloat === "function" ? rng : null;
     this._craters = Array.from({ length: craterCount }, () => ({
       dx: (rand.nextFloat() - 0.5) * radius * 0.8,
       dy: (rand.nextFloat() - 0.5) * radius * 0.8,
       r: rand.nextFloat() * radius * 0.3 + 2,
     }));
+    // Recompute and store palette for this asteroid instance
+    this._palette = CONFIG.COLORS.ASTEROID;
+    if (this.isIndestructible) {
+      const planets = CONFIG.COLORS.ASTEROID_PLANETS;
+      if (Array.isArray(planets) && planets.length > 0) {
+        const idx = this._rng
+          ? Math.floor(this._rng.nextFloat() * planets.length)
+          : Math.floor(Math.random() * planets.length);
+        this._palette = planets[idx];
+      } else {
+        this._palette = CONFIG.COLORS.ASTEROID_DARK || CONFIG.COLORS.ASTEROID;
+      }
+    }
+    const paletteSpeedFactor =
+      this._palette && typeof this._palette.SPEED_FACTOR === "number"
+        ? this._palette.SPEED_FACTOR
+        : null;
+    this.speed = paletteSpeedFactor ? speed * paletteSpeedFactor : speed;
   }
 
   /** Trigger a brief shield hit flash (no-op for normal asteroids). */

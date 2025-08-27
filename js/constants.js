@@ -49,6 +49,62 @@ const COLORS = deepFreeze({
     SHIELD: "#FFBF8A", // warm orange glow for impacts
     RING: "#6B3926", // match crater color for unified look
   },
+  // Multiple planet-style palettes for indestructible asteroids.
+  // SpawnManager / Asteroid will pick one at random when an indestructible asteroid is created.
+  ASTEROID_PLANETS: [
+    // Mars-like (warm, rusty)
+    {
+      NAME: "MARS",
+      CRATER: "#6B3926",
+      GRAD_IN: "#FF8C42",
+      GRAD_MID: "#C1440E",
+      GRAD_OUT: "#3C1A0E",
+      OUTLINE: "#8B3E2F",
+      SHIELD: "#FFBF8A",
+      // Mars feels a bit heavy but not the slowest
+      SPEED_FACTOR: 0.6,
+      RING: "#6B3926",
+    },
+    // Earth-like (blue/green)
+    {
+      NAME: "EARTH",
+      CRATER: "#2b6b2b",
+      GRAD_IN: "#9be7a6",
+      GRAD_MID: "#2b8f6b",
+      GRAD_OUT: "#0f4f36",
+      OUTLINE: "#08321f",
+      SHIELD: "#a8f0c8",
+      // Earth is a bit denser than Mars for a heavier feel
+      SPEED_FACTOR: 0.55,
+      RING: "#2b6b2b",
+    },
+    // Ice world (icy cyan / white)
+    {
+      NAME: "ICE",
+      CRATER: "#bddfe8",
+      GRAD_IN: "#ffffff",
+      GRAD_MID: "#c7f0ff",
+      GRAD_OUT: "#8ec6d6",
+      OUTLINE: "#5b92a2",
+      SHIELD: "#dff7ff",
+      // Ice world drifts slowly
+      SPEED_FACTOR: 0.4,
+      RING: "#bddfe8",
+    },
+    // Gas giant (banded orange/brown)
+    {
+      NAME: "GAS",
+      CRATER: "#a36b3a",
+      GRAD_IN: "#ffdba8",
+      GRAD_MID: "#d18b3f",
+      GRAD_OUT: "#7a4a24",
+      OUTLINE: "#4b2d18",
+      SHIELD: "#ffd6a0",
+      // Gas giant has moderate drift
+      SPEED_FACTOR: 0.5,
+      RING: "#a36b3a",
+    },
+  ],
   BACKGROUND: {
     BOTTOM: "#444",
     MID: "#222",
@@ -122,6 +178,12 @@ export const CONFIG = deepFreeze({
     MIN_SIZE: 25,
     SIZE_VARIATION: 50,
     SPAWN_Y: -40,
+    // Size multipliers applied to regular and indestructible asteroids.
+    // Regular asteroids are slightly smaller; indestructible asteroids are larger like planets.
+    REGULAR_SIZE_FACTOR: 0.85,
+    INDESTRUCTIBLE_SIZE_FACTOR: 1.6,
+    // Indestructible asteroids move more slowly to feel massive
+    INDESTRUCTIBLE_SPEED_FACTOR: 0.55,
     SPEED_VARIATION: 120,
     SHIELD_FLASH_TIME: 0.15,
     SHIELD_FLASH_EXTRA_ALPHA: 0.4,

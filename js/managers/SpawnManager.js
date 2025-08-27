@@ -92,17 +92,23 @@ export class SpawnManager {
   static createAsteroid(game) {
     const rng = game.rng;
     const st = this.#state(game);
-    const width = CONFIG.ASTEROID.MIN_SIZE + rng.nextFloat() * CONFIG.ASTEROID.SIZE_VARIATION;
-    const height = CONFIG.ASTEROID.MIN_SIZE + rng.nextFloat() * CONFIG.ASTEROID.SIZE_VARIATION;
-    const speed = game.asteroidSpeed + rng.nextFloat() * CONFIG.ASTEROID.SPEED_VARIATION;
-    const minX = CONFIG.ASTEROID.HORIZONTAL_MARGIN / 2;
-    const maxX = Math.max(minX, game.view.width - width - CONFIG.ASTEROID.HORIZONTAL_MARGIN / 2);
-    const x = minX + rng.nextFloat() * (maxX - minX);
-    // Determine indestructible asteroid cadence from config.
+    // Determine indestructible asteroid cadence from config before selecting sizes
     const asteroidThreshold = CONFIG.GAME.ASTEROID_NORMAL_BEFORE_INDESTRUCTIBLE | 0 || 10;
     const count = st.normalAsteroidCount | 0;
     const isIndestructible = count >= asteroidThreshold;
     st.normalAsteroidCount = isIndestructible ? 0 : count + 1;
+
+    // Base size then apply size factor depending on type
+    const baseSize = CONFIG.ASTEROID.MIN_SIZE + rng.nextFloat() * CONFIG.ASTEROID.SIZE_VARIATION;
+    const sizeFactor = isIndestructible
+      ? CONFIG.ASTEROID.INDESTRUCTIBLE_SIZE_FACTOR
+      : CONFIG.ASTEROID.REGULAR_SIZE_FACTOR;
+    const width = Math.max(4, Math.round(baseSize * sizeFactor));
+    const height = Math.max(4, Math.round(baseSize * sizeFactor));
+    const speed = game.asteroidSpeed + rng.nextFloat() * CONFIG.ASTEROID.SPEED_VARIATION;
+    const minX = CONFIG.ASTEROID.HORIZONTAL_MARGIN / 2;
+    const maxX = Math.max(minX, game.view.width - width - CONFIG.ASTEROID.HORIZONTAL_MARGIN / 2);
+    const x = minX + rng.nextFloat() * (maxX - minX);
     return game.asteroidPool
       ? game.asteroidPool.acquire(
           x,
