@@ -27,8 +27,8 @@ describe("SpawnManager counters", () => {
     }
 
     const indestructible = results.filter((a) => a.isIndestructible);
-    // Expect at least one indestructible in 12 spawns (every 11th)
-    expect(indestructible.length).toBeGreaterThanOrEqual(1);
+    // With the lowered threshold expect multiple indestructibles in 12 spawns
+    expect(indestructible.length).toBeGreaterThanOrEqual(2);
   });
 
   it("creates a red star after 10 yellow stars", () => {
@@ -39,6 +39,7 @@ describe("SpawnManager counters", () => {
     for (let i = 0; i < 12; i++) results.push(SpawnManager.createStar(g));
 
     const red = results.filter((s) => s.isRed);
-    expect(red.length).toBeGreaterThanOrEqual(1);
+    // With the lowered yellow-before-red cadence, expect at least two red stars in 12 spawns
+    expect(red.length).toBeGreaterThanOrEqual(2);
   });
 });

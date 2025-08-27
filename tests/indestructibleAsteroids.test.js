@@ -40,10 +40,11 @@ describe("Indestructible asteroids", () => {
       g.asteroids.push(SpawnManager.createAsteroid(g));
     }
     const ind = g.asteroids.filter((a) => a.isIndestructible);
-    expect(ind.length).toBe(2);
-    // Check the positions (11th and 22nd)
-    expect(g.asteroids[10].isIndestructible).toBe(true);
-    expect(g.asteroids[21].isIndestructible).toBe(true);
+    // With the threshold lowered to 4, expect more indestructibles (roughly 4 in 22)
+    expect(ind.length).toBeGreaterThanOrEqual(3);
+    // Check a few expected positions (5th, 10th, 15th, 20th -> indices 4,9,14,19)
+    expect(g.asteroids[4].isIndestructible).toBe(true);
+    expect(g.asteroids[9].isIndestructible).toBe(true);
   });
 
   it("bullets don't destroy indestructible asteroids", () => {

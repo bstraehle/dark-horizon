@@ -98,9 +98,10 @@ export class SpawnManager {
     const minX = CONFIG.ASTEROID.HORIZONTAL_MARGIN / 2;
     const maxX = Math.max(minX, game.view.width - width - CONFIG.ASTEROID.HORIZONTAL_MARGIN / 2);
     const x = minX + rng.nextFloat() * (maxX - minX);
-    // Every 11th asteroid (after 10 normals) is indestructible
+    // Determine indestructible asteroid cadence from config.
+    const asteroidThreshold = CONFIG.GAME.ASTEROID_NORMAL_BEFORE_INDESTRUCTIBLE | 0 || 10;
     const count = st.normalAsteroidCount | 0;
-    const isIndestructible = count >= 10;
+    const isIndestructible = count >= asteroidThreshold;
     st.normalAsteroidCount = isIndestructible ? 0 : count + 1;
     return game.asteroidPool
       ? game.asteroidPool.acquire(
@@ -133,11 +134,11 @@ export class SpawnManager {
     const maxX = Math.max(minX, game.view.width - width - CONFIG.STAR.HORIZONTAL_MARGIN / 2);
     const x = minX + rng.nextFloat() * (maxX - minX);
     // Determine if this star should be a red bonus star
-    // We spawn 1 red for every 10 yellow stars. Use a simple counter on the game object.
+    // Determine red star cadence from config (number of yellow stars before a red appears).
+    const starThreshold = CONFIG.GAME.STAR_YELLOW_BEFORE_RED | 0 || 10;
     const count = st.yellowCount | 0;
-    // After 10 yellow stars, the next one should be red.
-    const isRed = count >= 10;
-    // Track yellows: after 10 yellows, spawn one red and reset
+    const isRed = count >= starThreshold;
+    // Track yellows: after `starThreshold` yellows, spawn one red and reset
     st.yellowCount = isRed ? 0 : count + 1;
 
     return game.starPool

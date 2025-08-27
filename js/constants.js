@@ -161,6 +161,12 @@ export const CONFIG = deepFreeze({
     STAR_SCORE: 20,
     STAR_SCORE_RED: 50,
     STAR_SPAWN_RATE: 1.0,
+    // How many yellow stars are spawned before a red bonus star appears.
+    // Original behavior used 10 (so the 11th was red). Lower this to increase red star frequency.
+    STAR_YELLOW_BEFORE_RED: 4,
+    // How many normal asteroids are spawned before an indestructible one appears.
+    // Original behavior used 10 (so the 11th was indestructible). Lower this to increase frequency.
+    ASTEROID_NORMAL_BEFORE_INDESTRUCTIBLE: 4,
   },
   INPUT: {
     CONFIRM_CODES: ["Enter"].sort(),

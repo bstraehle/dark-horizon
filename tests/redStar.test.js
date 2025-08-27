@@ -22,11 +22,13 @@ describe("Red star cadence and scoring", () => {
     for (let i = 1; i <= 22; i++) {
       stars.push(SpawnManager.createStar(g));
     }
-    // 11th and 22nd should be red
-    expect(stars[10].isRed).toBe(true);
-    expect(stars[21].isRed).toBe(true);
-    // Others in first 10 should be yellow
-    for (let i = 0; i < 10; i++) expect(!!stars[i].isRed).toBe(false);
+    // With STAR_YELLOW_BEFORE_RED reduced to 4, the 5th, 10th, 15th, 20th should be red
+    expect(stars[4].isRed).toBe(true);
+    expect(stars[9].isRed).toBe(true);
+    expect(stars[14].isRed).toBe(true);
+    expect(stars[19].isRed).toBe(true);
+    // Earlier ones before first red should be yellow
+    for (let i = 0; i < 4; i++) expect(!!stars[i].isRed).toBe(false);
   });
 
   it("awards 20 for yellow, 50 for red on collection", () => {
