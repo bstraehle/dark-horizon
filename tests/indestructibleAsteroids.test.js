@@ -2,6 +2,7 @@
 import { describe, it, expect } from "vitest";
 import { SpawnManager } from "../js/managers/SpawnManager.js";
 import { CollisionManager } from "../js/managers/CollisionManager.js";
+import { CONFIG } from "../js/constants.js";
 
 function makeRng() {
   return {
@@ -75,12 +76,25 @@ describe("Indestructible asteroids", () => {
       width: 20,
       height: 20,
       isIndestructible: true,
+      _hits: 0,
+      onShieldHit() {
+        // emulate visual feedback
+        this._shield = true;
+      },
+      onBulletHit() {
+        this._hits = (this._hits || 0) + 1;
+        return this._hits >= (CONFIG.ASTEROID.INDESTRUCTIBLE_HITS || 10);
+      },
       getBounds() {
         return this;
       },
     };
     g.asteroids.push(normal, hard);
-    // Two bullets, one for each
+    // We'll fire repeated bullets at the indestructible asteroid and assert it
+    // only disappears after CONFIG.ASTEROID.INDESTRUCTIBLE_HITS impacts.
+    const hitsNeeded = CONFIG.ASTEROID.INDESTRUCTIBLE_HITS || 10;
+
+    // First, confirm a single bullet destroys the normal asteroid as before
     g.bullets.push({
       x: 15,
       y: 15,
@@ -90,6 +104,28 @@ describe("Indestructible asteroids", () => {
         return this;
       },
     });
+    CollisionManager.check(g);
+    expect(g.asteroids.some((a) => a === normal)).toBe(false);
+
+    // Now repeatedly shoot the hard asteroid
+    for (let i = 0; i < hitsNeeded - 1; i++) {
+      g.bullets.length = 0;
+      g.bullets.push({
+        x: 45,
+        y: 15,
+        width: 5,
+        height: 5,
+        getBounds() {
+          return this;
+        },
+      });
+      CollisionManager.check(g);
+      // After fewer than required hits, the hard asteroid should remain
+      expect(g.asteroids.some((a) => a === hard)).toBe(true);
+    }
+
+    // Final hit should remove it
+    g.bullets.length = 0;
     g.bullets.push({
       x: 45,
       y: 15,
@@ -99,11 +135,7 @@ describe("Indestructible asteroids", () => {
         return this;
       },
     });
-
-    // No events needed for this check
     CollisionManager.check(g);
-    // Normal asteroid should be removed, indestructible remains
-    expect(g.asteroids.some((a) => a === normal)).toBe(false);
-    expect(g.asteroids.some((a) => a === hard)).toBe(true);
+    expect(g.asteroids.some((a) => a === hard)).toBe(false);
   });
 });

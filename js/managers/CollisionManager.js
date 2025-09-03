@@ -162,16 +162,37 @@ export class CollisionManager {
           if (CollisionManager.intersects(b, a)) {
             // Bullets always get removed on impact
             toRemoveBullets.add(b);
-            // Indestructible asteroids are not removed and produce no explosion/score
-            if (!a.isIndestructible) {
-              toRemoveAsteroids.add(a);
-              if (game.events) game.events.emit("bulletHitAsteroid", { asteroid: a, bullet: b });
-            } else if (a && typeof a.onShieldHit === "function") {
-              try {
-                a.onShieldHit();
-              } catch {
-                /* noop */
+            // For regular asteroids, remove immediately. For indestructible asteroids,
+            // allow the asteroid to track hits and only remove when its internal
+            // threshold is reached. Also emit the same event when an asteroid is
+            // actually destroyed so other systems react the same way.
+            try {
+              if (a && a.isIndestructible) {
+                // Indestructible asteroids should manage their own destruction via onBulletHit.
+                if (typeof a.onBulletHit === "function") {
+                  const shouldDestroy = a.onBulletHit();
+                  if (shouldDestroy) {
+                    toRemoveAsteroids.add(a);
+                    if (game.events)
+                      game.events.emit("bulletHitAsteroid", { asteroid: a, bullet: b });
+                  }
+                } else if (typeof a.onShieldHit === "function") {
+                  // If only a shield handler exists (test mocks), call it but don't destroy.
+                  try {
+                    a.onShieldHit();
+                  } catch {
+                    /* noop */
+                  }
+                } else {
+                  // No handlers: respect indestructible flag and do nothing.
+                }
+              } else {
+                // Regular asteroid: destroy immediately
+                toRemoveAsteroids.add(a);
+                if (game.events) game.events.emit("bulletHitAsteroid", { asteroid: a, bullet: b });
               }
+            } catch {
+              /* noop */
             }
             hit = true;
             break;

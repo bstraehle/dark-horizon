@@ -59,6 +59,8 @@ export class Asteroid {
         ? this._palette.SPEED_FACTOR
         : null;
     this.speed = paletteSpeedFactor ? speed * paletteSpeedFactor : speed;
+    // Track bullet hits for indestructible asteroids
+    this._hits = 0;
   }
 
   /**
@@ -154,6 +156,8 @@ export class Asteroid {
     this.speed = speed;
     this.isIndestructible = !!isIndestructible;
     this._shieldFlash = 0;
+    // Reset hit counter when reusing from pool so prior hits don't carry over
+    this._hits = 0;
     const radius = this.width / 2;
     const craterCount = 3;
     const rand =
@@ -193,5 +197,18 @@ export class Asteroid {
   onShieldHit() {
     if (!this.isIndestructible) return;
     this._shieldFlash = CONFIG.ASTEROID.SHIELD_FLASH_TIME;
+  }
+
+  /**
+   * Register a bullet hit against this asteroid. For regular asteroids this should not be called.
+   * For indestructible asteroids, increment the internal hit counter and return true when the
+   * asteroid should be destroyed (after CONFIG.ASTEROID.INDESTRUCTIBLE_HITS hits).
+   * @returns {boolean} true if asteroid should now be destroyed
+   */
+  onBulletHit() {
+    if (!this.isIndestructible) return true; // regular asteroids are destroyed immediately
+    this._hits = (this._hits || 0) + 1;
+    this.onShieldHit();
+    return this._hits >= (CONFIG.ASTEROID.INDESTRUCTIBLE_HITS || 10);
   }
 }

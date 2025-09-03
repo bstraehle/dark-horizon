@@ -182,6 +182,8 @@ export const CONFIG = deepFreeze({
     INDESTRUCTIBLE_SPEED_FACTOR: 0.55,
     SPEED_VARIATION: 120,
     SHIELD_FLASH_TIME: 0.15,
+    // Number of bullet hits required to destroy an indestructible asteroid
+    INDESTRUCTIBLE_HITS: 10,
     SHIELD_FLASH_EXTRA_ALPHA: 0.4,
   },
   BULLET: {
