@@ -174,10 +174,13 @@ export class Asteroid {
         const lenFactor = desc
           ? desc.len
           : 0.6 + (this._rng ? this._rng.nextFloat() : Math.random()) * 0.5;
+        // compute end factor but clamp it so cracks don't protrude outside the asteroid circle
+        const endFactorRaw = lenFactor + severity * 0.3;
+        const endFactor = Math.min(endFactorRaw, 0.95);
         const sx = centerX + Math.cos(angle) * radius * 0.3;
         const sy = centerY + Math.sin(angle) * radius * 0.3;
-        const ex = centerX + Math.cos(angle + 0.6) * radius * (lenFactor + severity * 0.3);
-        const ey = centerY + Math.sin(angle + 0.6) * radius * (lenFactor + severity * 0.3);
+        const ex = centerX + Math.cos(angle + 0.6) * radius * endFactor;
+        const ey = centerY + Math.sin(angle + 0.6) * radius * endFactor;
         ctx.beginPath();
         ctx.moveTo(sx, sy);
         ctx.quadraticCurveTo(centerX, centerY, ex, ey);
@@ -187,7 +190,10 @@ export class Asteroid {
       if (severity > 0.7) {
         ctx.lineWidth = 2 + severity * 3;
         ctx.globalAlpha = 0.9;
-        ctx.strokeStyle = "rgba(0,0,0,0.7)";
+        // Prefer a palette-aware damage color for the final pronounced crack instead of pure black
+        const finalCrackColor =
+          typeof damageColor !== "undefined" && damageColor ? damageColor : "rgba(0,0,0,0.7)";
+        ctx.strokeStyle = finalCrackColor;
         ctx.beginPath();
         ctx.moveTo(centerX - radius * 0.4, centerY - radius * 0.2);
         ctx.lineTo(centerX + radius * 0.1, centerY + radius * 0.5);
@@ -283,10 +289,12 @@ export class Asteroid {
         this._rng && typeof this._rng.nextFloat === "function"
           ? this._rng
           : { nextFloat: Math.random.bind(Math) };
-      // Push a single damage line per hit: angle + length factor
+      // Push a single damage line per hit: angle + length factor (clamped so cracks stay inside)
+      const rawLen = 0.6 + rand.nextFloat() * 0.5;
+      const clampedLen = Math.min(rawLen, 0.9);
       this._damageLines.push({
         angle: rand.nextFloat() * Math.PI * 2,
-        len: 0.6 + rand.nextFloat() * 0.5,
+        len: clampedLen,
       });
     } catch {
       /* noop */
