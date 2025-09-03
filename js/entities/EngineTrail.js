@@ -57,20 +57,26 @@ export class EngineTrail {
       const denom = particle.maxLife || CONFIG.ENGINE_TRAIL.LIFE;
       const alpha = Math.max(0, Math.min(1, particle.life / denom));
       ctx.globalAlpha = alpha;
+      // Make the trail look like a tapered flame: elongated ellipse + warm flame gradient
       const r = particle.size * CONFIG.ENGINE_TRAIL.DRAW_SIZE_MULT;
+      // radial gradient anchored slightly above the particle so the bright core sits near the nozzle
       const trailGradient = ctx.createRadialGradient(
         particle.x,
-        particle.y,
+        particle.y - r * 0.25,
         0,
         particle.x,
-        particle.y,
-        r
+        particle.y + r * 0.75,
+        r * 1.25
       );
-      trailGradient.addColorStop(0, CONFIG.COLORS.ENGINE.GLOW1);
-      trailGradient.addColorStop(1, CONFIG.COLORS.ENGINE.GLOW3);
+      // Use yellow -> orange -> transparent red to match the ship's engine flame
+      trailGradient.addColorStop(0, "rgba(255,220,80,0.98)");
+      trailGradient.addColorStop(0.45, "rgba(255,140,55,0.9)");
+      trailGradient.addColorStop(1, "rgba(255,60,20,0)");
       ctx.fillStyle = trailGradient;
       ctx.beginPath();
-      ctx.arc(particle.x, particle.y, r, 0, PI2);
+      // Draw an elongated ellipse to simulate a flame blob
+      // scale on Y for tapering effect
+      ctx.ellipse(particle.x, particle.y, r * 0.6, r * 1.4, 0, 0, PI2);
       ctx.fill();
     });
     ctx.restore();

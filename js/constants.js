@@ -117,11 +117,7 @@ const COLORS = deepFreeze({
     SHADOW: "#ff6b6b",
     TRAIL: "rgba(255, 107, 107, 0.5)",
   },
-  ENGINE: {
-    GLOW1: "rgba(255, 100, 100, 0.8)",
-    GLOW2: "rgba(255, 150, 100, 0.4)",
-    GLOW3: "rgba(255, 200, 100, 0)",
-  },
+
   EXPLOSION: {
     GRAD_IN: "rgba(255, 255, 255, ", // alpha appended
     GRAD_MID1: "rgba(255, 200, 100, ", // alpha appended
