@@ -70,6 +70,20 @@ export const EventHandlers = {
         const add = star && star.isRed ? CONFIG.GAME.STAR_SCORE_RED : CONFIG.GAME.STAR_SCORE;
         game.score += add;
         game.updateScore();
+        // Show a red +50 popup for red bonus stars (styled like indestructible asteroid popup but red)
+        if (star && star.isRed && typeof game.createScorePopup === "function") {
+          const opts = {
+            color: CONFIG.COLORS.STAR_RED.BASE,
+            fontSize: 20,
+            fontWeight: "700",
+            glow: true,
+            glowColor: CONFIG.COLORS.STAR_RED.BASE,
+            glowBlur: 12,
+            stroke: "rgba(0,0,0,0.85)",
+            maxLife: 1.2,
+          };
+          game.createScorePopup(star.x + star.width / 2, star.y + star.height / 2, add, opts);
+        }
       })
     );
 
