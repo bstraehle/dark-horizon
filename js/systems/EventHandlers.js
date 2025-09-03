@@ -22,8 +22,34 @@ export const EventHandlers = {
       /** @param {any} payload */
       events.on("bulletHitAsteroid", function (payload) {
         const { asteroid } = payload;
-        game.score += CONFIG.GAME.ASTEROID_SCORE;
+        // Award points (special-case indestructible asteroids)
+        const add =
+          asteroid && asteroid.isIndestructible
+            ? CONFIG.GAME.ASTEROID_SCORE_INDESTRUCTIBLE
+            : CONFIG.GAME.ASTEROID_SCORE;
+        game.score += add;
+        // Create explosion and a colored score popup
         game.createExplosion(asteroid.x + asteroid.width / 2, asteroid.y + asteroid.height / 2);
+        // Only show a score popup for indestructible asteroids
+        if (asteroid && asteroid.isIndestructible && typeof game.createScorePopup === "function") {
+          // Dramatic +100 popup: larger font, gold color, glow and dark stroke for contrast
+          const opts = {
+            color: "#ffd700",
+            fontSize: 20,
+            fontWeight: "700",
+            glow: true,
+            glowColor: "#ffd700",
+            glowBlur: 12,
+            stroke: "rgba(0,0,0,0.85)",
+            maxLife: 1.2,
+          };
+          game.createScorePopup(
+            asteroid.x + asteroid.width / 2,
+            asteroid.y + asteroid.height / 2,
+            add,
+            opts
+          );
+        }
         game.updateScore();
       })
     );

@@ -61,6 +61,9 @@ export class Asteroid {
     this.speed = paletteSpeedFactor ? speed * paletteSpeedFactor : speed;
     // Track bullet hits for indestructible asteroids
     this._hits = 0;
+    // Stored damage line descriptors so cracks are stable across frames
+    /** @type {{angle:number,len:number}[]} */
+    this._damageLines = [];
   }
 
   /**
@@ -129,6 +132,70 @@ export class Asteroid {
       ctx.stroke();
       ctx.restore();
     }
+
+    // Visual damage stages for indestructible asteroids based on hit count.
+    // Subtle scratches -> deeper cracks as hits increase.
+    if (this.isIndestructible && this._hits > 0) {
+      ctx.save();
+      const severity = Math.max(
+        0,
+        Math.min(1, this._hits / (CONFIG.ASTEROID.INDESTRUCTIBLE_HITS || 10))
+      );
+      // number of scratch lines scales with severity
+      const lines = 1 + Math.floor(severity * 4);
+      // Choose a damage color based on palette. ICE gets light/white scratches;
+      // otherwise prefer SHIELD, then RING, then OUTLINE.
+      let damageColor;
+      if (palette && palette.NAME === "ICE") {
+        damageColor = "rgba(255,255,255,0.85)";
+      } else if (palette && palette.SHIELD) {
+        damageColor = palette.SHIELD;
+      } else if (palette && palette.RING) {
+        damageColor = palette.RING;
+      } else if (palette && palette.OUTLINE) {
+        damageColor = palette.OUTLINE;
+      } else {
+        damageColor = "rgba(255,255,255,0.6)";
+      }
+      // Slightly different width/alpha for icy palettes (so scratches look delicate)
+      if (palette && palette.NAME === "ICE") {
+        ctx.strokeStyle = damageColor;
+        ctx.lineWidth = 0.8 + severity * 1.2;
+        ctx.globalAlpha = 0.25 + 0.5 * severity;
+      } else {
+        ctx.strokeStyle = damageColor;
+        ctx.lineWidth = 1 + severity * 2;
+        ctx.globalAlpha = 0.4 + 0.6 * severity;
+      }
+      // Use stored damage lines when available to avoid flicker
+      for (let i = 0; i < lines; i++) {
+        const desc = this._damageLines && this._damageLines[i];
+        const angle = desc ? desc.angle : (i / lines) * Math.PI * 2;
+        const lenFactor = desc
+          ? desc.len
+          : 0.6 + (this._rng ? this._rng.nextFloat() : Math.random()) * 0.5;
+        const sx = centerX + Math.cos(angle) * radius * 0.3;
+        const sy = centerY + Math.sin(angle) * radius * 0.3;
+        const ex = centerX + Math.cos(angle + 0.6) * radius * (lenFactor + severity * 0.3);
+        const ey = centerY + Math.sin(angle + 0.6) * radius * (lenFactor + severity * 0.3);
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.quadraticCurveTo(centerX, centerY, ex, ey);
+        ctx.stroke();
+      }
+      // If nearly destroyed, draw a pronounced crack
+      if (severity > 0.7) {
+        ctx.lineWidth = 2 + severity * 3;
+        ctx.globalAlpha = 0.9;
+        ctx.strokeStyle = "rgba(0,0,0,0.7)";
+        ctx.beginPath();
+        ctx.moveTo(centerX - radius * 0.4, centerY - radius * 0.2);
+        ctx.lineTo(centerX + radius * 0.1, centerY + radius * 0.5);
+        ctx.lineTo(centerX + radius * 0.4, centerY - radius * 0.1);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
     ctx.restore();
   }
 
@@ -158,6 +225,7 @@ export class Asteroid {
     this._shieldFlash = 0;
     // Reset hit counter when reusing from pool so prior hits don't carry over
     this._hits = 0;
+    this._damageLines = [];
     const radius = this.width / 2;
     const craterCount = 3;
     const rand =
@@ -209,6 +277,20 @@ export class Asteroid {
     if (!this.isIndestructible) return true; // regular asteroids are destroyed immediately
     this._hits = (this._hits || 0) + 1;
     this.onShieldHit();
+    // Add a stable damage line for this hit so visuals don't flicker
+    try {
+      const rand =
+        this._rng && typeof this._rng.nextFloat === "function"
+          ? this._rng
+          : { nextFloat: Math.random.bind(Math) };
+      // Push a single damage line per hit: angle + length factor
+      this._damageLines.push({
+        angle: rand.nextFloat() * Math.PI * 2,
+        len: 0.6 + rand.nextFloat() * 0.5,
+      });
+    } catch {
+      /* noop */
+    }
     return this._hits >= (CONFIG.ASTEROID.INDESTRUCTIBLE_HITS || 10);
   }
 }

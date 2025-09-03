@@ -111,5 +111,38 @@ export class RenderManager {
     if (game.engineTrail && typeof game.engineTrail.draw === "function") {
       game.engineTrail.draw(game.ctx);
     }
+    // Draw score popups (transient text)
+    if (game.scorePopups && game.scorePopups.length > 0) {
+      const ctx = game.ctx;
+      for (let i = game.scorePopups.length - 1; i >= 0; i--) {
+        const p = game.scorePopups[i];
+        p.life += game._lastDtSec || 1 / 60;
+        const t = p.life / p.maxLife;
+        if (p.life >= p.maxLife) {
+          game.scorePopups.splice(i, 1);
+          continue;
+        }
+        ctx.save();
+        const fontSize = p.fontSize || 18;
+        const fontWeight = p.fontWeight || "700";
+        ctx.font = `${fontWeight} ${fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        const rise = -20 * t;
+        ctx.globalAlpha = 1 - t;
+        if (p.glow) {
+          ctx.shadowColor = p.glowColor || p.color || "#fff";
+          ctx.shadowBlur = p.glowBlur || 12;
+        }
+        if (p.stroke) {
+          ctx.strokeStyle = p.stroke;
+          ctx.lineWidth = Math.max(1, (fontSize / 14) | (0 + 1));
+          ctx.strokeText(p.text, p.x, p.y + rise);
+        }
+        ctx.fillStyle = p.color || "#fff";
+        ctx.fillText(p.text, p.x, p.y + rise);
+        ctx.restore();
+      }
+    }
   }
 }

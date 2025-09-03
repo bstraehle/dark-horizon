@@ -143,6 +143,8 @@ class DarkHorizon {
     this.explosions = [];
     /** @type {any[]} */
     this.particles = [];
+    /** @type {{x:number,y:number,life:number,maxLife:number,text:string,color:string,fontSize?:number,fontWeight?:string,glow?:boolean,glowColor?:string,glowBlur?:number,stroke?:string}[]} */
+    this.scorePopups = [];
     /** @type {Star[]} */
     this.stars = [];
 
@@ -194,6 +196,51 @@ class DarkHorizon {
       stepMs: CONFIG.TIME.STEP_MS,
       maxSubSteps: CONFIG.TIME.MAX_SUB_STEPS,
     });
+  }
+
+  /**
+   * Create a transient score popup drawn on the canvas.
+   * @param {number} x
+   * @param {number} y
+   * @param {number} score
+   * @param {{color?:string,fontSize?:number,fontWeight?:string,glow?:boolean,glowColor?:string,glowBlur?:number,stroke?:string,maxLife?:number}} [opts]
+   */
+  createScorePopup(x, y, score, opts) {
+    const o = opts || {};
+    this.scorePopups.push({
+      x,
+      y,
+      life: 0,
+      maxLife: typeof o.maxLife === "number" ? o.maxLife : 0.9,
+      text: `+${score}`,
+      color: o.color || "#fff",
+      fontSize: o.fontSize || 18,
+      fontWeight: o.fontWeight || "700",
+      glow: !!o.glow,
+      glowColor: o.glowColor || o.color || "#fff",
+      glowBlur: o.glowBlur || 8,
+      stroke: o.stroke || undefined,
+    });
+  }
+
+  /** Create a small gold particle burst for indestructible asteroid kills. */
+  /**
+   * @param {number} x
+   * @param {number} y
+   */
+  createGoldBurst(x, y) {
+    const rng = this.rng;
+    const count = 8;
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 * i) / count + (rng.nextFloat() - 0.5) * 0.4;
+      const speed = rng.range(40, 160);
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed;
+      const size = rng.range(2, 6);
+      const life = 0.6 + rng.nextFloat() * 0.6;
+      const color = "#ffd700";
+      this.particles.push(this.particlePool.acquire(x, y, vx, vy, life, life, size, color));
+    }
   }
 
   /** no-op placeholder to hint presence; handlers are registered in systems/EventHandlers */

@@ -218,6 +218,8 @@ export const CONFIG = deepFreeze({
   },
   GAME: {
     ASTEROID_SCORE: 10,
+    // Points awarded for destroying an indestructible asteroid
+    ASTEROID_SCORE_INDESTRUCTIBLE: 100,
     ASTEROID_SPAWN_RATE: 2.0,
     SHOT_COOLDOWN: 200,
     STARFIELD_COUNT: 150,
