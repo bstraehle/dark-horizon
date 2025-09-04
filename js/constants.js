@@ -168,6 +168,8 @@ export const CONFIG = deepFreeze({
   VIEW: {
     DPR_MIN: 1,
     DPR_MAX: 3,
+    // Maximum DPR to use on mobile devices to limit canvas pixel size and improve performance
+    DPR_MOBILE_MAX: 1.5,
   },
   ASTEROID: {
     HORIZONTAL_MARGIN: 40,
@@ -223,6 +225,8 @@ export const CONFIG = deepFreeze({
     ASTEROID_SPAWN_RATE: 2.0,
     SHOT_COOLDOWN: 200,
     STARFIELD_COUNT: 150,
+    // Lower starfield density on mobile to reduce per-frame work
+    STARFIELD_COUNT_MOBILE: 80,
     STAR_SCORE: 20,
     STAR_SCORE_RED: 50,
     STAR_SPAWN_RATE: 1.0,

@@ -24,7 +24,7 @@ export class BackgroundManager {
     if (running) {
       state.nebulaConfigs = Nebula.init(width, height, isMobile, rng);
     }
-    state.starField = StarField.init(width, height, rng);
+    state.starField = StarField.init(width, height, rng, isMobile);
     return state;
   }
 

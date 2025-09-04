@@ -21,18 +21,27 @@ export class ViewManager {
       relCenterX = centerX / prevW;
       relBottom = bottomOffset / prevH;
     }
-    const dpr = Math.max(
-      CONFIG.VIEW.DPR_MIN,
-      Math.min(CONFIG.VIEW.DPR_MAX, window.devicePixelRatio || 1)
-    );
+    let deviceDpr = window.devicePixelRatio || 1;
+    // Determine a conservative mobile hint: prefer the game's _isMobile flag, else fallback to basic touch check.
+    // Cast to any to avoid static typing errors when checking a runtime-only flag.
+    const gAny = /** @type {any} */ (game);
+    const hintIsMobile =
+      typeof gAny === "object" && typeof gAny._isMobile === "boolean"
+        ? gAny._isMobile
+        : (navigator.maxTouchPoints || 0) > 0;
+    if (hintIsMobile && CONFIG.VIEW.DPR_MOBILE_MAX) {
+      deviceDpr = Math.min(deviceDpr, CONFIG.VIEW.DPR_MOBILE_MAX);
+    }
+    const dpr = Math.max(CONFIG.VIEW.DPR_MIN, Math.min(CONFIG.VIEW.DPR_MAX, deviceDpr));
     view.dpr = dpr;
-    view.width = Math.floor(window.innerWidth);
-    view.height = Math.floor(window.innerHeight);
+    view.width = Math.round(window.innerWidth);
+    view.height = Math.round(window.innerHeight);
 
     canvas.style.width = view.width + "px";
     canvas.style.height = view.height + "px";
-    canvas.width = Math.floor(view.width * dpr);
-    canvas.height = Math.floor(view.height * dpr);
+    // Use rounded pixel sizes for backing store to avoid off-by-one reflows
+    canvas.width = Math.round(view.width * dpr);
+    canvas.height = Math.round(view.height * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     if (wasRunning && prevW > 0 && prevH > 0) {

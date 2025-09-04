@@ -24,9 +24,12 @@ export class StarField {
    * @param {number} height
    * @param {import('../types.js').RNGLike} [rng]
    */
-  static init(width, height, rng) {
+  static init(width, height, rng, isMobile = false) {
     const rand = rng || { nextFloat: Math.random.bind(Math) };
-    return Array.from({ length: CONFIG.GAME.STARFIELD_COUNT }, () => ({
+    const count = isMobile
+      ? CONFIG.GAME.STARFIELD_COUNT_MOBILE || CONFIG.GAME.STARFIELD_COUNT
+      : CONFIG.GAME.STARFIELD_COUNT;
+    return Array.from({ length: count }, () => ({
       x: rand.nextFloat() * width,
       y: rand.nextFloat() * height,
       size: rand.nextFloat() * CONFIG.STARFIELD.SIZE_VAR + CONFIG.STARFIELD.SIZE_MIN,
