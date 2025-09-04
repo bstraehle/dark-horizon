@@ -32,13 +32,16 @@ export const EventHandlers = {
         game.createExplosion(asteroid.x + asteroid.width / 2, asteroid.y + asteroid.height / 2);
         // Only show a score popup for indestructible asteroids
         if (asteroid && asteroid.isIndestructible && typeof game.createScorePopup === "function") {
-          // Dramatic +100 popup: larger font, gold color, glow and dark stroke for contrast
+          // Dramatic +100 popup: use asteroid's palette color when available (keeps theme consistent),
+          // otherwise fall back to gold. Prefer a mid gradient color for good contrast.
+          const pal = asteroid && asteroid._palette ? asteroid._palette : null;
+          const baseColor = (pal && (pal.GRAD_MID || pal.GRAD_IN || pal.CRATER)) || "#ffd700";
           const opts = {
-            color: "#ffd700",
+            color: baseColor,
             fontSize: 20,
             fontWeight: "700",
             glow: true,
-            glowColor: "#ffd700",
+            glowColor: baseColor,
             glowBlur: 12,
             stroke: "rgba(0,0,0,0.85)",
             maxLife: 1.2,

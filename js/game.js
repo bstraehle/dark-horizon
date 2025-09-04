@@ -789,10 +789,16 @@ class DarkHorizon {
    * Start or restart the game, reset scores and state.
    */
   startGame() {
-    this.state.start();
+    // Reset runtime game state, ensure canvas/view metrics are up-to-date
+    // and position the player at the initial spawn before starting.
     this.resetGameState();
+    // resizeCanvas uses ViewManager.resize which will place the player
+    // at the spawn position when the game is not yet running.
+    this.resizeCanvas();
     this.hideGameInfo();
     this.initBackground();
+    // Now mark the state as running and start the loop.
+    this.state.start();
     this.loop.start();
   }
 
