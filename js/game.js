@@ -1098,7 +1098,14 @@ class DarkHorizon {
    * Init the background.
    */
   initBackground() {
-    const { nebulaConfigs, starField } = BackgroundManager.init(getGameContext(this));
+    // Build a game context for the background manager. If we don't yet have
+    // any nebulaConfigs (initial load / menu), force nebula generation so the
+    // start screen has a visible nebula even when the game isn't running.
+    const ctx = getGameContext(this);
+    if (!this.nebulaConfigs) {
+      ctx.running = true; // force nebula creation for initial/menu background
+    }
+    const { nebulaConfigs, starField } = BackgroundManager.init(ctx);
     // Preserve existing nebula when not re-generated (e.g., paused/gameover)
     if (nebulaConfigs) this.nebulaConfigs = nebulaConfigs;
     this.starField = starField;
