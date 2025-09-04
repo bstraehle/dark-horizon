@@ -639,6 +639,42 @@ class DarkHorizon {
 
     // Reset spawn counters so cadence aligns with new platform expectations
     SpawnManager.reset(this);
+    // Force nebula regeneration on next init so each new game gets a fresh background.
+    this.nebulaConfigs = undefined;
+    // If no RNG seed was provided via URL, create a fresh RNG for nebula generation
+    // so each Play Again produces a different nebula. If a seed was provided,
+    // preserve reproducibility by not reseeding.
+    try {
+      const url = new URL(window.location.href);
+      if (!url.searchParams.has(CONFIG.RNG.SEED_PARAM)) {
+        // Use a time-derived seed to ensure nebula differs between Play Again runs.
+        // Combine Date.now() and performance.now() when available for extra entropy.
+        let seed = (Date.now() >>> 0) ^ 0;
+        try {
+          if (typeof performance !== "undefined" && typeof performance.now === "function") {
+            seed = (seed ^ (Math.floor(performance.now()) & 0xffffffff)) >>> 0;
+          }
+        } catch (_e) {
+          /* ignore */
+        }
+        // Mix in a small Math.random salt to avoid same-ms collisions across tabs.
+        seed = (seed ^ ((Math.random() * 0xffffffff) >>> 0)) >>> 0;
+        this._nebulaRng = new RNG(seed);
+      } else {
+        this._nebulaRng = undefined;
+      }
+    } catch (_e) {
+      // Non-browser/test envs: use a time-derived seed where possible
+      const seed =
+        ((Date.now() >>> 0) ^
+          (typeof performance !== "undefined" && performance.now
+            ? Math.floor(performance.now()) & 0xffffffff
+            : 0)) >>>
+        0;
+      this._nebulaRng = new RNG((seed ^ ((Math.random() * 0xffffffff) >>> 0)) >>> 0);
+    }
+    // Force nebula regeneration on next init so each new game gets a fresh background.
+    this.nebulaConfigs = undefined;
 
     // Re-warm pools for likely smaller/larger entities (cheap, optional)
     try {
@@ -828,9 +864,40 @@ class DarkHorizon {
     this.particles = [];
     this.stars = [];
     this.fireLimiter.reset();
-    this.input.fireHeld = false;
+    // Clear input state (mouse/touch and keys) so a lingering touch doesn't
+    // cause the player to immediately move away from the spawn position on restart.
+    // FullReset creates a fresh InputState; mirror that behaviour here.
+    this.input = new InputState();
     // Reset spawn cadence counters managed by SpawnManager
     SpawnManager.reset(this);
+    // Force nebula regeneration on next init so Play Again shows a fresh nebula.
+    this.nebulaConfigs = undefined;
+    try {
+      const url = new URL(window.location.href);
+      if (!url.searchParams.has(CONFIG.RNG.SEED_PARAM)) {
+        // time-derived seed to reduce chance of identical nebula between rapid restarts
+        let seed = (Date.now() >>> 0) ^ 0;
+        try {
+          if (typeof performance !== "undefined" && typeof performance.now === "function") {
+            seed = (seed ^ (Math.floor(performance.now()) & 0xffffffff)) >>> 0;
+          }
+        } catch (_e) {
+          /* ignore */
+        }
+        seed = (seed ^ ((Math.random() * 0xffffffff) >>> 0)) >>> 0;
+        this._nebulaRng = new RNG(seed);
+      } else {
+        this._nebulaRng = undefined;
+      }
+    } catch (_e) {
+      const seed =
+        ((Date.now() >>> 0) ^
+          (typeof performance !== "undefined" && performance.now
+            ? Math.floor(performance.now()) & 0xffffffff
+            : 0)) >>>
+        0;
+      this._nebulaRng = new RNG((seed ^ ((Math.random() * 0xffffffff) >>> 0)) >>> 0);
+    }
   }
 
   /**
@@ -1102,6 +1169,30 @@ class DarkHorizon {
     // any nebulaConfigs (initial load / menu), force nebula generation so the
     // start screen has a visible nebula even when the game isn't running.
     const ctx = getGameContext(this);
+    // Prefer a fresh, time-seeded RNG for nebula generation on init (Play Again)
+    // when the user hasn't provided a deterministic seed via URL. This avoids
+    // reusing the main game RNG state which can produce identical nebula across
+    // restarts. If a URL seed is present, keep reproducible behavior by not
+    // overriding the RNG.
+    try {
+      const url = new URL(window.location.href);
+      if (!url.searchParams.has(CONFIG.RNG.SEED_PARAM)) {
+        // create a small time-derived seed
+        let seed = (Date.now() >>> 0) ^ 0;
+        try {
+          if (typeof performance !== "undefined" && typeof performance.now === "function") {
+            seed = (seed ^ (Math.floor(performance.now()) & 0xffffffff)) >>> 0;
+          }
+        } catch (_e) {
+          /* ignore */
+        }
+        seed = (seed ^ ((Math.random() * 0xffffffff) >>> 0)) >>> 0;
+        ctx.rng = new RNG(seed);
+      }
+    } catch (_e) {
+      // Non-browser/test envs: fall back to fresh RNG
+      ctx.rng = new RNG();
+    }
     if (!this.nebulaConfigs) {
       ctx.running = true; // force nebula creation for initial/menu background
     }
