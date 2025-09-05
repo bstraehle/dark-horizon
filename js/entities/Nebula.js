@@ -79,11 +79,16 @@ export class Nebula {
           (CONFIG.NEBULA.BLOB_MIN_FACTOR + rand.nextFloat() * CONFIG.NEBULA.BLOB_VAR_FACTOR);
         const sx = 0.8 + rand.nextFloat() * 1.2;
         const sy = 0.6 + rand.nextFloat() * 1.0;
+        const baseOx = Math.cos(ang) * dist;
+        const baseOy = Math.sin(ang) * dist;
         return {
-          baseOx: Math.cos(ang) * dist,
-          baseOy: Math.sin(ang) * dist,
-          ox: 0,
-          oy: 0,
+          baseOx,
+          baseOy,
+          // Initialize current offsets to the base values so the first
+          // rendered frame (before any update) matches the generated layout
+          // and doesn't visually jump when animation starts.
+          ox: baseOx,
+          oy: baseOy,
           r,
           rot: rand.nextFloat() * CONFIG.TWO_PI,
           sx,

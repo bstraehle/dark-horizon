@@ -827,7 +827,20 @@ class DarkHorizon {
   startGame() {
     // Reset runtime game state, ensure canvas/view metrics are up-to-date
     // and position the player at the initial spawn before starting.
-    this.resetGameState();
+    // If we're starting from Game Over (Play Again), force nebula regeneration.
+    // For the initial "Launch Mission" flow we want to preserve the nebula
+    // that was generated on page load, so do not force regeneration.
+    let wasGameOver = false;
+    try {
+      wasGameOver = !!(
+        this.state &&
+        typeof this.state.isGameOver === "function" &&
+        this.state.isGameOver()
+      );
+    } catch (_e) {
+      wasGameOver = false;
+    }
+    this.resetGameState(wasGameOver);
     // resizeCanvas uses ViewManager.resize which will place the player
     // at the spawn position when the game is not yet running.
     this.resizeCanvas();
@@ -841,7 +854,7 @@ class DarkHorizon {
   /**
    * Reset score and clear dynamic entity arrays.
    */
-  resetGameState() {
+  resetGameState(forceNebula = false) {
     /**
      * Release all elements back to their pool.
      * @param {Array<any>} arr
@@ -870,33 +883,37 @@ class DarkHorizon {
     this.input = new InputState();
     // Reset spawn cadence counters managed by SpawnManager
     SpawnManager.reset(this);
-    // Force nebula regeneration on next init so Play Again shows a fresh nebula.
-    this.nebulaConfigs = undefined;
-    try {
-      const url = new URL(window.location.href);
-      if (!url.searchParams.has(CONFIG.RNG.SEED_PARAM)) {
-        // time-derived seed to reduce chance of identical nebula between rapid restarts
-        let seed = (Date.now() >>> 0) ^ 0;
-        try {
-          if (typeof performance !== "undefined" && typeof performance.now === "function") {
-            seed = (seed ^ (Math.floor(performance.now()) & 0xffffffff)) >>> 0;
+    // Only force nebula regeneration and create a fresh nebula RNG when
+    // explicitly requested (Play Again). Preserve existing nebula for the
+    // initial "Launch Mission" so the background stays the same as on page load.
+    if (forceNebula) {
+      this.nebulaConfigs = undefined;
+      try {
+        const url = new URL(window.location.href);
+        if (!url.searchParams.has(CONFIG.RNG.SEED_PARAM)) {
+          // time-derived seed to reduce chance of identical nebula between rapid restarts
+          let seed = (Date.now() >>> 0) ^ 0;
+          try {
+            if (typeof performance !== "undefined" && typeof performance.now === "function") {
+              seed = (seed ^ (Math.floor(performance.now()) & 0xffffffff)) >>> 0;
+            }
+          } catch (_e) {
+            /* ignore */
           }
-        } catch (_e) {
-          /* ignore */
+          seed = (seed ^ ((Math.random() * 0xffffffff) >>> 0)) >>> 0;
+          this._nebulaRng = new RNG(seed);
+        } else {
+          this._nebulaRng = undefined;
         }
-        seed = (seed ^ ((Math.random() * 0xffffffff) >>> 0)) >>> 0;
-        this._nebulaRng = new RNG(seed);
-      } else {
-        this._nebulaRng = undefined;
+      } catch (_e) {
+        const seed =
+          ((Date.now() >>> 0) ^
+            (typeof performance !== "undefined" && performance.now
+              ? Math.floor(performance.now()) & 0xffffffff
+              : 0)) >>>
+          0;
+        this._nebulaRng = new RNG((seed ^ ((Math.random() * 0xffffffff) >>> 0)) >>> 0);
       }
-    } catch (_e) {
-      const seed =
-        ((Date.now() >>> 0) ^
-          (typeof performance !== "undefined" && performance.now
-            ? Math.floor(performance.now()) & 0xffffffff
-            : 0)) >>>
-        0;
-      this._nebulaRng = new RNG((seed ^ ((Math.random() * 0xffffffff) >>> 0)) >>> 0);
     }
   }
 
@@ -965,7 +982,15 @@ class DarkHorizon {
    * Update all game objects and check collisions.
    */
   update(dtSec = CONFIG.TIME.DEFAULT_DT) {
-    if (this.nebulaConfigs) {
+    // Only animate nebula when the game is actively running. This keeps the
+    // nebula static on the start/menu screen (Launch Mission) while still
+    // allowing motion during active gameplay.
+    if (
+      this.nebulaConfigs &&
+      this.state &&
+      typeof this.state.isRunning === "function" &&
+      this.state.isRunning()
+    ) {
       Nebula.update(this.view.width, this.view.height, this.nebulaConfigs, this._isMobile, dtSec);
     }
     updateAsteroids(this, dtSec);
