@@ -16,7 +16,7 @@
     />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; require-trusted-types-for 'script'; upgrade-insecure-requests"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; upgrade-insecure-requests"
     />
     <title>DARK HORIZON</title>
     <link rel="shortcut icon" href="favicon.png?v=2" type="image/png" />
@@ -72,6 +72,9 @@
       <div class="game-over-content">
         <h2 id="gameOverTitle">GAME OVER</h2>
         <p>Final Score: <span id="finalScore">0</span></p>
+        <div id="leaderboard" class="leaderboard" aria-live="polite">
+          <ol id="leaderboardList"></ol>
+        </div>
         <button
           id="restartBtn"
           class="action-button"

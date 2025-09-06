@@ -30,6 +30,7 @@ import { RenderManager } from "./managers/RenderManager.js";
 import { SpawnManager } from "./managers/SpawnManager.js";
 import { SpriteManager } from "./managers/SpriteManager.js";
 import { UIManager } from "./managers/UIManager.js";
+import LeaderboardManager from "./managers/LeaderboardManager.js";
 import { ViewManager } from "./managers/ViewManager.js";
 
 // Utils
@@ -81,6 +82,9 @@ class DarkHorizon {
     this.currentScoreEl = /** @type {HTMLElement} */ (document.getElementById("currentScore"));
     this.highScoreEl = /** @type {HTMLElement} */ (document.getElementById("highScore"));
     this.finalScoreEl = /** @type {HTMLElement} */ (document.getElementById("finalScore"));
+    this.leaderboardListEl = /** @type {HTMLElement} */ (
+      document.getElementById("leaderboardList")
+    );
 
     this.highScore = UIManager.loadHighScore();
     this.score = 0;
@@ -183,6 +187,15 @@ class DarkHorizon {
     this._unsubscribeEvents = EventHandlers.register(this);
 
     this.startBtn.focus();
+
+    // Render initial leaderboard into the Game Over overlay (if present)
+    try {
+      if (!this.leaderboardListEl)
+        this.leaderboardListEl = document.getElementById("leaderboardList");
+      LeaderboardManager.render(this.leaderboardListEl);
+    } catch (_e) {
+      /* ignore */
+    }
 
     this.loop = new GameLoop({
       update: (dtMs, dtSec) => {
@@ -939,7 +952,20 @@ class DarkHorizon {
     this.updateHighScore();
     // Ensure pause overlay is hidden if game ends while paused
     UIManager.hidePause(this.pauseScreen);
+    // Submit score to local leaderboard and then show game over UI
+    try {
+      LeaderboardManager.submit(this.score);
+    } catch (_e) {
+      /* ignore */
+    }
     this.showGameOver();
+    try {
+      if (!this.leaderboardListEl)
+        this.leaderboardListEl = document.getElementById("leaderboardList");
+      LeaderboardManager.render(this.leaderboardListEl);
+    } catch (_e) {
+      /* ignore */
+    }
     if (this.loop) this.loop.stop();
   }
 
