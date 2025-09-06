@@ -222,6 +222,8 @@ export const CONFIG = deepFreeze({
     ASTEROID_SCORE: 10,
     // Points awarded for destroying an indestructible asteroid
     ASTEROID_SCORE_INDESTRUCTIBLE: 100,
+    // Global fallback spawn rates (kept for compatibility). Prefer the
+    // platform-specific keys below when the game provides a platform hint.
     ASTEROID_SPAWN_RATE: 2.0,
     SHOT_COOLDOWN: 200,
     STARFIELD_COUNT: 150,
@@ -230,6 +232,14 @@ export const CONFIG = deepFreeze({
     STAR_SCORE: 20,
     STAR_SCORE_RED: 50,
     STAR_SPAWN_RATE: 1.0,
+    // Platform-specific spawn rates. These increase desktop density while
+    // keeping mobile rates conservative to reduce per-frame work.
+    // Adjust these numbers to tune difficulty/density on each platform.
+    // Slightly increased desktop spawn rates per request
+    ASTEROID_SPAWN_RATE_DESKTOP: 4.0,
+    ASTEROID_SPAWN_RATE_MOBILE: 1.5,
+    STAR_SPAWN_RATE_DESKTOP: 2.0,
+    STAR_SPAWN_RATE_MOBILE: 1.0,
     // How many yellow stars are spawned before a red bonus star appears.
     // Original behavior used 10 (so the 11th was red). Lower this to increase red star frequency.
     STAR_YELLOW_BEFORE_RED: 4,

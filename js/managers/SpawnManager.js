@@ -13,6 +13,7 @@ import { Star } from "../entities/Star.js";
  * @property {ViewSize} view
  * @property {number} asteroidSpeed
  * @property {number} starSpeed
+ * @property {boolean} [_isMobile]
  * @property {AsteroidPool | null | undefined} [asteroidPool]
  * @property {StarPool | null | undefined} [starPool]
  * @property {Asteroid[]} asteroids
@@ -91,8 +92,25 @@ export class SpawnManager {
   static spawnObjects(game, dtSec) {
     const dt = typeof dtSec === "number" ? dtSec : CONFIG.TIME.DEFAULT_DT;
     const rng = game.rng;
-    const pAst = 1 - Math.exp(-CONFIG.GAME.ASTEROID_SPAWN_RATE * dt);
-    const pStar = 1 - Math.exp(-CONFIG.GAME.STAR_SPAWN_RATE * dt);
+    // Prefer platform-specific spawn rates when the game object provides
+    // a mobile hint. Fall back to the legacy global rates for tests and
+    // callers that don't include the flag.
+    const isMobile = typeof game._isMobile === "boolean" ? game._isMobile : null;
+    const asteroidRate =
+      isMobile === true
+        ? CONFIG.GAME.ASTEROID_SPAWN_RATE_MOBILE
+        : isMobile === false
+          ? CONFIG.GAME.ASTEROID_SPAWN_RATE_DESKTOP
+          : CONFIG.GAME.ASTEROID_SPAWN_RATE;
+    const starRate =
+      isMobile === true
+        ? CONFIG.GAME.STAR_SPAWN_RATE_MOBILE
+        : isMobile === false
+          ? CONFIG.GAME.STAR_SPAWN_RATE_DESKTOP
+          : CONFIG.GAME.STAR_SPAWN_RATE;
+
+    const pAst = 1 - Math.exp(-asteroidRate * dt);
+    const pStar = 1 - Math.exp(-starRate * dt);
     if (rng.nextFloat() < pAst) game.asteroids.push(this.createAsteroid(game));
     if (rng.nextFloat() < pStar) game.stars.push(this.createStar(game));
   }
