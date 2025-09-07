@@ -85,10 +85,21 @@ class DarkHorizon {
     this.leaderboardListEl = /** @type {HTMLElement} */ (
       document.getElementById("leaderboardList")
     );
+    this.timerEl = /** @type {HTMLElement|null} */ (document.getElementById("timer"));
 
     this.highScore = UIManager.loadHighScore();
     this.score = 0;
     this.updateHighScore();
+
+    // Timer configuration
+    this.timerSeconds = CONFIG.GAME.TIMER_SECONDS || 60;
+    this.timerRemaining = this.timerSeconds;
+    // Ensure UI shows initial timer
+    try {
+      UIManager.setTimer(this.timerEl, this.timerRemaining);
+    } catch (_e) {
+      /* ignore */
+    }
 
     this.input = new InputState();
     this.events = new EventBus();
@@ -757,6 +768,13 @@ class DarkHorizon {
     // Reset scores and timers
     this.score = 0;
     this.updateScore();
+    // reset countdown timer
+    this.timerRemaining = this.timerSeconds;
+    try {
+      UIManager.setTimer(this.timerEl, this.timerRemaining);
+    } catch (_e) {
+      /* ignore */
+    }
     this.timeMs = 0;
     this.timeSec = 0;
     this.fireLimiter.reset();
@@ -884,6 +902,13 @@ class DarkHorizon {
     releaseAll(this.stars, this.starPool);
     this.score = 0;
     this.updateScore();
+    // reset countdown timer for new game
+    this.timerRemaining = this.timerSeconds;
+    try {
+      UIManager.setTimer(this.timerEl, this.timerRemaining);
+    } catch (_e) {
+      /* ignore */
+    }
     this.asteroids = [];
     this.bullets = [];
     this.explosions = [];
@@ -1031,6 +1056,23 @@ class DarkHorizon {
     this.spawnObjects(dtSec);
     this.checkCollisions();
     this.player.update(this.input.keys, this.input.mouse, this.view, dtSec);
+
+    // Countdown timer -- only while running
+    try {
+      if (this.state.isRunning()) {
+        this.timerRemaining -= dtSec;
+        if (this.timerRemaining <= 0) {
+          this.timerRemaining = 0;
+          UIManager.setTimer(this.timerEl, this.timerRemaining);
+          // Force game over when timer expires
+          this.gameOver();
+        } else {
+          UIManager.setTimer(this.timerEl, this.timerRemaining);
+        }
+      }
+    } catch (_e) {
+      /* ignore in non-DOM/test envs */
+    }
   }
 
   /**

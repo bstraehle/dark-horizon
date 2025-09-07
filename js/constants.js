@@ -246,6 +246,8 @@ export const CONFIG = deepFreeze({
     // How many normal asteroids are spawned before an indestructible one appears.
     // Original behavior used 10 (so the 11th was indestructible). Lower this to increase frequency.
     ASTEROID_NORMAL_BEFORE_INDESTRUCTIBLE: 4,
+    // Countdown timer in seconds for time-limited runs
+    TIMER_SECONDS: 60,
   },
   INPUT: {
     CONFIRM_CODES: ["Enter"].sort(),

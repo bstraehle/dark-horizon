@@ -19,6 +19,20 @@ export class UIManager {
     if (currentScoreEl) currentScoreEl.textContent = String(score);
   }
 
+  /**
+   * Update visible countdown timer text.
+   * @param {HTMLElement|null} timerEl
+   * @param {number} secondsRemaining
+   */
+  static setTimer(timerEl, secondsRemaining) {
+    if (!timerEl) return;
+    // Format M:SS
+    const s = Math.max(0, Math.floor(secondsRemaining));
+    const mins = Math.floor(s / 60);
+    const secs = s % 60;
+    timerEl.textContent = `${mins}:${secs.toString().padStart(2, "0")}`;
+  }
+
   /** Set and persist high score; returns the new high score.
    * @param {number} score
    * @param {number} [prevHigh]
