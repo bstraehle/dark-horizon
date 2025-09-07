@@ -74,8 +74,26 @@ export class LeaderboardManager {
       const device = /Mobi|Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(ua)
         ? "Mobile"
         : "Desktop";
-      const browserMatch = ua.match(/(Firefox|Chrome|Safari|Edg|Edge)\/?(\d+)?/i);
-      const browser = browserMatch ? browserMatch[1] : "?";
+      // Prefer specific tokens first (Edge, DuckDuckGo) because many UAs
+      // also contain "Chrome" and a naive regex will pick Chrome prematurely.
+      /** @type {[RegExp, string][]} */
+      const checks = [
+        [/Edg\//i, "Edge"],
+        [/\bEdge\//i, "Edge"],
+        [/DuckDuckGo/i, "DuckDuckGo"],
+        [/FxiOS|Firefox\//i, "Firefox"],
+        [/CriOS|Chrome\//i, "Chrome"],
+        [/Safari\//i, "Safari"],
+      ];
+      let browser = "?";
+      for (const pair of checks) {
+        const rx = pair[0];
+        const label = pair[1];
+        if (rx instanceof RegExp && rx.test(ua)) {
+          browser = label;
+          break;
+        }
+      }
       // store only device-browser (avoid storing full user-agent)
       return `${device}-${browser}`;
     } catch (_) {
