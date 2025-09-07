@@ -410,6 +410,9 @@ body {
 .about-content p.about-back .action-link {
   padding-left: 0;
   padding-right: 0;
+  /* Ensure the Back link aligns with surrounding content by removing
+    the global .action-link top margin specifically on the about page */
+  margin-top: 0;
 }
 .about-header svg {
   width: 88px;
