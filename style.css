@@ -181,6 +181,27 @@ body {
 .action-button:hover {
   background: var(--btn-bg-hover);
 }
+.action-group {
+  display: block;
+  margin-top: var(--space-5);
+  text-align: center;
+}
+
+.action-link {
+  color: var(--color-text-secondary);
+  display: inline-block;
+  margin-top: var(--space-4);
+  text-decoration: none;
+  font-weight: 600;
+  padding: var(--space-2) var(--space-3);
+}
+.action-link:focus-visible {
+  outline: 3px solid var(--color-btn-focus-outline);
+  outline-offset: -3px;
+}
+.action-link:hover {
+  color: var(--color-text);
+}
 .hidden {
   display: none !important;
 }
@@ -311,4 +332,111 @@ body {
   /* ensure spacing below the leaderboard equals the top spacing */
   margin-top: var(--space-4);
   min-height: 1.2em;
+}
+
+/* About page visuals */
+.about-header {
+  text-align: center;
+  margin-bottom: var(--space-4);
+}
+
+/* Restore normal page scrolling and layout for the standalone about page. */
+.about-body {
+  /* Override global hidden overflow used during gameplay */
+  overflow: auto !important;
+}
+
+.about-page {
+  /* Use a simple centered column that can scroll when content is tall */
+  display: block;
+  min-height: 100vh;
+  /* Remove extra top padding to avoid apparent larger gap above the title */
+  padding: 0 var(--space-5) 0 var(--space-5);
+  box-sizing: border-box;
+}
+.about-content {
+  margin: 0 auto;
+  max-width: 920px;
+  text-align: center;
+}
+.about-content h1 {
+  /* Equal top/bottom margins for consistent vertical rhythm */
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-6);
+  font-size: clamp(1.5rem, 3vw + 1rem, 2.5rem);
+  text-align: center;
+  text-shadow: 0 0 20px var(--color-title-shadow);
+}
+
+.about-content h2,
+.about-content h3 {
+  font-size: 1.25rem;
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-2);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Ensure paragraphs and lists inside the about content align uniformly */
+.about-content .instructions,
+.about-content p {
+  text-align: left;
+  max-width: 720px;
+  margin: 8px auto 0;
+  color: var(--color-text-secondary);
+}
+.about-content ul {
+  text-align: left;
+  max-width: 720px;
+  margin: 8px auto 0;
+  padding-left: 1.2em;
+}
+
+/* Left-align the Back link in the about page */
+.about-content p.about-back {
+  /* Align the Back link with the main content column */
+  text-align: left;
+  max-width: 720px;
+  margin: 8px auto 0; /* same as other content blocks */
+  padding-left: 0;
+}
+
+/* Remove horizontal padding for the Back link so it lines up with text */
+.about-content p.about-back .action-link {
+  padding-left: 0;
+  padding-right: 0;
+}
+.about-header svg {
+  width: 88px;
+  height: auto;
+  display: inline-block;
+  vertical-align: middle;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.6));
+}
+.about-icon {
+  width: 0.9em;
+  height: 0.9em;
+  vertical-align: -0.12em;
+  margin-right: 0.35ch;
+  fill: currentColor;
+  opacity: 0.95;
+}
+
+/* Tighter spacing for about page on small screens */
+@media (max-width: 480px) {
+  .about-page {
+    padding: var(--space-5) var(--space-3);
+  }
+  .about-content {
+    padding: 0 6px;
+  }
+  .about-header {
+    margin-bottom: var(--space-3);
+  }
+  .about-content h1 {
+    font-size: 1.4rem;
+  }
+  .instructions {
+    font-size: 0.98rem;
+  }
 }
