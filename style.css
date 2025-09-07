@@ -350,8 +350,13 @@ body {
   /* Use a simple centered column that can scroll when content is tall */
   display: block;
   min-height: 100vh;
-  /* Remove extra top padding to avoid apparent larger gap above the title */
-  padding: 0 var(--space-5) 0 var(--space-5);
+  /* Ensure equal top/bottom spacing and respect device safe-area insets on mobile.
+    Use the larger of the design spacing or the device inset so the header doesn't
+    appear offset by the status bar. Left/right padding stays as before. */
+  padding-top: max(var(--space-6), env(safe-area-inset-top));
+  padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
+  padding-left: var(--space-5);
+  padding-right: var(--space-5);
   box-sizing: border-box;
 }
 .about-content {
