@@ -347,14 +347,14 @@ body {
 }
 
 .about-page {
-  /* Use a simple centered column that can scroll when content is tall */
+  /* Use a simple centered column that scrolls when content is tall. Remove 100vh
+    to avoid mobile browser chrome/viewport quirks causing apparent offset. */
   display: block;
-  min-height: 100vh;
-  /* Ensure equal top/bottom spacing and respect device safe-area insets on mobile.
-    Use the larger of the design spacing or the device inset so the header doesn't
-    appear offset by the status bar. Left/right padding stays as before. */
-  padding-top: max(var(--space-6), env(safe-area-inset-top));
-  padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
+  /* Let height flow naturally instead of forcing 100vh */
+  /* Use symmetric padding that also respects the larger safe-area inset so
+    top and bottom remain visually equal on notched devices. */
+  padding-top: max(var(--space-6), env(safe-area-inset-top), env(safe-area-inset-bottom));
+  padding-bottom: max(var(--space-6), env(safe-area-inset-top), env(safe-area-inset-bottom));
   padding-left: var(--space-5);
   padding-right: var(--space-5);
   box-sizing: border-box;
@@ -430,7 +430,11 @@ body {
 /* Tighter spacing for about page on small screens */
 @media (max-width: 480px) {
   .about-page {
-    padding: var(--space-5) var(--space-3);
+    /* Tighter symmetric padding on narrow screens */
+    padding-top: var(--space-5);
+    padding-bottom: var(--space-5);
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
   }
   .about-content {
     padding: 0 6px;
