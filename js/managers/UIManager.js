@@ -2,6 +2,15 @@
  * UIManager centralizes DOM updates and focus management for overlays and scores.
  */
 export class UIManager {
+  /** Safe Element check for non-browser environments. */
+  /**
+   * Safe Element check for non-browser environments.
+   * @param {unknown} obj
+   * @returns {obj is Element}
+   */
+  static isElement(obj) {
+    return typeof Element !== "undefined" && obj instanceof Element;
+  }
   /** Load high score from localStorage safely. */
   static loadHighScore() {
     try {
@@ -181,14 +190,16 @@ export class UIManager {
     const overlayStartVisible = !!(gameInfo && !gameInfo.classList.contains("hidden"));
     if (!overlayGameOverVisible && !overlayStartVisible) return;
 
-    const t = /** @type {Element|null} */ (e && e.target instanceof Element ? e.target : null);
+    const t = UIManager.isElement(e && e.target) ? /** @type {Element} */ (e.target) : null;
     if (overlayGameOverVisible) {
-      const isRestart = t === restartBtn || (t && t.closest && t.closest("#restartBtn"));
+      const isRestart =
+        t === restartBtn || (t && typeof t.closest === "function" && t.closest("#restartBtn"));
       if (!isRestart) UIManager.focusWithRetry(restartBtn);
       return;
     }
     if (overlayStartVisible) {
-      const isStart = t === startBtn || (t && t.closest && t.closest("#startBtn"));
+      const isStart =
+        t === startBtn || (t && typeof t.closest === "function" && t.closest("#startBtn"));
       if (!isStart) UIManager.focusWithRetry(startBtn);
     }
   }
@@ -200,9 +211,9 @@ export class UIManager {
    */
   static handleStartScreenFocusGuard(e, gameInfo, startBtn) {
     if (!gameInfo || gameInfo.classList.contains("hidden")) return;
-    const t = /** @type {Element|null} */ (e && e.target instanceof Element ? e.target : null);
+    const t = UIManager.isElement(e && e.target) ? /** @type {Element} */ (e.target) : null;
     const targetIsStart =
-      t === startBtn || (t && "closest" in t && t.closest && t.closest("#startBtn"));
+      t === startBtn || (t && typeof t.closest === "function" && t.closest("#startBtn"));
     if (!targetIsStart) {
       if (e.cancelable) e.preventDefault();
       e.stopPropagation();
@@ -217,9 +228,9 @@ export class UIManager {
    */
   static handleGameOverFocusGuard(e, gameOverScreen, restartBtn) {
     if (!gameOverScreen || gameOverScreen.classList.contains("hidden")) return;
-    const t = /** @type {Element|null} */ (e && e.target instanceof Element ? e.target : null);
+    const t = UIManager.isElement(e && e.target) ? /** @type {Element} */ (e.target) : null;
     const targetIsRestart =
-      t === restartBtn || (t && "closest" in t && t.closest && t.closest("#restartBtn"));
+      t === restartBtn || (t && typeof t.closest === "function" && t.closest("#restartBtn"));
     if (!targetIsRestart) {
       if (e.cancelable) e.preventDefault();
       e.stopPropagation();

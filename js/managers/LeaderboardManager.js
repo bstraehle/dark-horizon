@@ -304,14 +304,16 @@ export class LeaderboardManager {
       listEl.appendChild(li);
       return;
     }
-    for (const e of entries.slice(0, LeaderboardManager.MAX_ENTRIES)) {
+    const medals = ["🥇", "🥈", "🥉"];
+    entries.slice(0, LeaderboardManager.MAX_ENTRIES).forEach((e, idx) => {
       const li = document.createElement("li");
-      // show compact stable short id, score, and device/browser text
+      // show medal (for top 3), compact stable short id, score, and device/browser text
+      const medal = medals[idx] || "";
       const badge = LeaderboardManager.makeShortId(e.id || "");
       const metaText = LeaderboardManager.metaToEmoji(e.meta || "");
-      li.textContent = `${badge} — ${e.score}${metaText ? ` (${metaText})` : ""}`;
+      li.textContent = `${medal ? `${medal} ` : ""}${badge} — ${e.score}${metaText ? ` (${metaText})` : ""}`;
       listEl.appendChild(li);
-    }
+    });
     return;
   }
 }
