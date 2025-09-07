@@ -212,6 +212,9 @@ export class UIManager {
   static handleStartScreenFocusGuard(e, gameInfo, startBtn) {
     if (!gameInfo || gameInfo.classList.contains("hidden")) return;
     const t = UIManager.isElement(e && e.target) ? /** @type {Element} */ (e.target) : null;
+    // Allow links (e.g. About) inside the overlay to be activated
+    const targetIsLink = t && typeof t.closest === "function" && t.closest("a");
+    if (targetIsLink) return;
     const targetIsStart =
       t === startBtn || (t && typeof t.closest === "function" && t.closest("#startBtn"));
     if (!targetIsStart) {
@@ -229,6 +232,9 @@ export class UIManager {
   static handleGameOverFocusGuard(e, gameOverScreen, restartBtn) {
     if (!gameOverScreen || gameOverScreen.classList.contains("hidden")) return;
     const t = UIManager.isElement(e && e.target) ? /** @type {Element} */ (e.target) : null;
+    // Allow links inside the game over overlay to be activated
+    const targetIsLink = t && typeof t.closest === "function" && t.closest("a");
+    if (targetIsLink) return;
     const targetIsRestart =
       t === restartBtn || (t && typeof t.closest === "function" && t.closest("#restartBtn"));
     if (!targetIsRestart) {
