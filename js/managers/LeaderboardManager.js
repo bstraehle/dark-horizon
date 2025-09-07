@@ -70,30 +70,68 @@ export class LeaderboardManager {
   static makeMeta() {
     try {
       const ua = navigator.userAgent || "";
-      // crude device hint: mobile vs desktop + browser token (use full words)
-      const device = /Mobi|Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(ua)
-        ? "Mobile"
-        : "Desktop";
-      // Prefer specific tokens first (Edge, DuckDuckGo) because many UAs
-      // also contain "Chrome" and a naive regex will pick Chrome prematurely.
-      /** @type {[RegExp, string][]} */
-      const checks = [
-        [/Edg\//i, "Edge"],
-        [/\bEdge\//i, "Edge"],
-        [/DuckDuckGo/i, "DuckDuckGo"],
-        [/FxiOS|Firefox\//i, "Firefox"],
-        [/CriOS|Chrome\//i, "Chrome"],
-        [/Safari\//i, "Safari"],
-      ];
+      // Prefer User-Agent Client Hints when available for more accurate brand info
+      const uaData = /** @type {any} */ (navigator).userAgentData;
+      const device =
+        uaData && typeof uaData.mobile === "boolean"
+          ? uaData.mobile
+            ? "Mobile"
+            : "Desktop"
+          : /Mobi|Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(ua)
+            ? "Mobile"
+            : "Desktop";
+
       let browser = "?";
-      for (const pair of checks) {
-        const rx = pair[0];
-        const label = pair[1];
-        if (rx instanceof RegExp && rx.test(ua)) {
-          browser = label;
-          break;
+
+      // If client hints are available, inspect the brands array first.
+      if (uaData && Array.isArray(uaData.brands) && uaData.brands.length) {
+        for (const b of uaData.brands) {
+          const brand = String((b && b.brand) || "");
+          if (/Edge|Edg|Microsoft Edge/i.test(brand)) {
+            browser = "Edge";
+            break;
+          }
+          if (/DuckDuckGo/i.test(brand)) {
+            browser = "DuckDuckGo";
+            break;
+          }
+          if (/Firefox/i.test(brand)) {
+            browser = "Firefox";
+            break;
+          }
+          if (/Chrome|Chromium|Google/i.test(brand)) {
+            browser = "Chrome";
+            break;
+          }
+          if (/Safari/i.test(brand)) {
+            browser = "Safari";
+            break;
+          }
         }
       }
+
+      // Fallback: regex checks against navigator.userAgent. Prefer specific tokens
+      // (Edge variants, DuckDuckGo) before Chrome so they aren't misclassified.
+      if (browser === "?") {
+        /** @type {[RegExp, string][]} */
+        const checks = [
+          [/EdgA|EdgiOS|Edg\//i, "Edge"],
+          [/\bEdge\//i, "Edge"],
+          [/DuckDuckGo|DuckDuck/i, "DuckDuckGo"],
+          [/FxiOS|Firefox\//i, "Firefox"],
+          [/CriOS|Chrome\//i, "Chrome"],
+          [/Safari\//i, "Safari"],
+        ];
+        for (const pair of checks) {
+          const rx = pair[0];
+          const label = pair[1];
+          if (rx instanceof RegExp && rx.test(ua)) {
+            browser = label;
+            break;
+          }
+        }
+      }
+
       // store only device-browser (avoid storing full user-agent)
       return `${device}-${browser}`;
     } catch (_) {
