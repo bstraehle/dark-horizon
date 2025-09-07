@@ -365,9 +365,9 @@ body {
   text-align: center;
 }
 .about-content h1 {
-  /* Equal top/bottom margins for consistent vertical rhythm */
-  margin-top: var(--space-6);
-  margin-bottom: var(--space-6);
+  /* Reduce h1 margins and rely on the container's padding for vertical spacing */
+  margin-top: 0;
+  margin-bottom: 0;
   font-size: clamp(1.5rem, 3vw + 1rem, 2.5rem);
   text-align: center;
   text-shadow: 0 0 20px var(--color-title-shadow);
