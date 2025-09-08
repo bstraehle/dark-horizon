@@ -199,6 +199,13 @@ body {
   outline: 3px solid var(--color-btn-focus-outline);
   outline-offset: -3px;
 }
+
+/* Fallback visual focus indicator applied by JS when programmatic focus is
+   ignored by the browser (mobile fallback). Kept transient (2s) in JS. */
+.js-force-focus {
+  outline: 3px solid var(--color-btn-focus-outline) !important;
+  outline-offset: -3px !important;
+}
 .action-link:hover {
   color: var(--color-text);
 }

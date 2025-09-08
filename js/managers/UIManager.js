@@ -109,12 +109,28 @@ export class UIManager {
     if (!el) return;
     const tryFocus = () => {
       try {
+        // Prefer focus with options when available to avoid scrolling.
         el.focus({ preventScroll: true });
+        // Some mobile browsers ignore focus(options); try plain focus as fallback.
+      } catch (_) {
+        try {
+          el.focus();
+        } catch (_) {
+          /* ignore */
+        }
+      }
+      // If focus with options didn't take effect, try plain focus too.
+      try {
+        if (document.activeElement !== el) el.focus();
       } catch (_) {
         /* ignore */
       }
     };
     tryFocus();
+    // Retry focusing a few times. If the browser still doesn't honor focus
+    // (common on some mobile browsers), add a temporary CSS class to give a
+    // visible focus indication so users see the Play/Restart button is the
+    // intended target.
     if (document.activeElement !== el) {
       requestAnimationFrame(() => {
         tryFocus();
@@ -127,6 +143,17 @@ export class UIManager {
                 if (document.activeElement !== el) {
                   setTimeout(() => {
                     tryFocus();
+                    // If focus still failed, add temporary visual indicator
+                    if (document.activeElement !== el) {
+                      try {
+                        el.classList.add("js-force-focus");
+                        setTimeout(() => {
+                          el.classList.remove("js-force-focus");
+                        }, 2000);
+                      } catch (_) {
+                        /* ignore */
+                      }
+                    }
                   }, 750);
                 }
               }, 250);
@@ -244,9 +271,11 @@ export class UIManager {
     if (targetIsLeaderboard) return;
     const targetIsRestart =
       t === restartBtn || (t && typeof t.closest === "function" && t.closest("#restartBtn"));
+    // Do not prevent default or stop propagation here: allow touch/scroll
+    // interactions (e.g. scrolling the leaderboard) to continue. Only
+    // ensure the restart button regains focus when appropriate.
     if (!targetIsRestart) {
-      if (e.cancelable) e.preventDefault();
-      e.stopPropagation();
+      // let the event continue so users can scroll/tap the leaderboard
     }
     UIManager.focusWithRetry(restartBtn);
   }

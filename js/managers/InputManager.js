@@ -43,8 +43,9 @@ export class InputManager {
     });
     restartBtn.addEventListener("blur", handlers.handleGameOverFocusGuard, true);
     gameOverScreen.addEventListener("mousedown", handlers.handleGameOverFocusGuard, true);
+    // Allow touchstart to be passive so users can scroll the leaderboard on mobile
     gameOverScreen.addEventListener("touchstart", handlers.handleGameOverFocusGuard, {
-      passive: false,
+      passive: true,
     });
     // Restore focus on overlay buttons when returning to the tab/window
     window.addEventListener("focus", handlers.handleWindowFocus);
