@@ -134,6 +134,9 @@ class DarkHorizon {
     // State machine controls high-level flow
     this.state = new GameStateMachine();
     this._pausedFrameRendered = false;
+    // Suppress automatic fullReset triggered by transient resizes (e.g. native prompt/keyboard)
+    // This is toggled around user prompts to avoid reverting to the start screen on mobile.
+    this._suppressFullResetOnResize = false;
 
     this.fireLimiter.reset();
     this.timeMs = 0;
@@ -624,7 +627,7 @@ class DarkHorizon {
       if (
         currentlyMobile !== this._isMobile ||
         crossedBreakpoint ||
-        (currentlyMobile && this.state.isGameOver())
+        (currentlyMobile && this.state.isGameOver() && !this._suppressFullResetOnResize)
       ) {
         this.fullReset();
       }
@@ -980,6 +983,9 @@ class DarkHorizon {
     // Submit score to local leaderboard and then show game over UI
     try {
       if (this.score > 0) {
+        // Suppress fullReset triggered by transient viewport/resize changes
+        // while the native prompt is active on some mobile browsers.
+        this._suppressFullResetOnResize = true;
         let userId = null;
         while (true) {
           userId = prompt("Enter your 3-letter ID (A-Z):", "AAA");
@@ -996,6 +1002,15 @@ class DarkHorizon {
       /* ignore */
     }
     this.showGameOver();
+    // Clear the suppression after the Game Over UI is shown — allow a short
+    // grace period so any prompt-induced resizes don't trigger a fullReset.
+    try {
+      setTimeout(() => {
+        this._suppressFullResetOnResize = false;
+      }, 800);
+    } catch (_e) {
+      this._suppressFullResetOnResize = false;
+    }
     try {
       if (!this.leaderboardListEl)
         this.leaderboardListEl = document.getElementById("leaderboardList");
