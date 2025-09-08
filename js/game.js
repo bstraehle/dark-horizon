@@ -980,13 +980,17 @@ class DarkHorizon {
     this.updateHighScore();
     // Ensure pause overlay is hidden if game ends while paused
     UIManager.hidePause(this.pauseScreen);
-    // Submit score to local leaderboard and then show game over UI
+    // Submit score to local leaderboard and then show game over UI.
+    // Track whether the user actually submitted a 3-letter ID so we can
+    // preserve scroll when focusing the Play Again button.
+    let userId = null;
+    let submittedScore = false;
     try {
       if (this.score > 0) {
         // Suppress fullReset triggered by transient viewport/resize changes
         // while the native prompt is active on some mobile browsers.
         this._suppressFullResetOnResize = true;
-        let userId = null;
+        userId = null;
         while (true) {
           userId = prompt("Enter your 3-letter ID (A-Z):", "AAA");
           if (userId === null) break; // user cancelled
@@ -996,11 +1000,13 @@ class DarkHorizon {
         }
         if (userId) {
           LeaderboardManager.submit(this.score, userId);
+          submittedScore = true;
         }
       }
     } catch (_e) {
       /* ignore */
     }
+
     // Render leaderboard first so the list is present before we show Game Over
     try {
       if (!this.leaderboardListEl)
@@ -1010,7 +1016,15 @@ class DarkHorizon {
       /* ignore */
     }
 
-    this.showGameOver();
+    // Show Game Over. If the user submitted a score prefer to preserve
+    // scroll when focusing so the leaderboard remains immediately scrollable.
+    UIManager.showGameOver(
+      this.gameOverScreen,
+      this.restartBtn,
+      this.finalScoreEl,
+      this.score,
+      submittedScore
+    );
     // Clear the suppression after the Game Over UI is shown — allow a short
     // grace period so any prompt-induced resizes don't trigger a fullReset.
     try {

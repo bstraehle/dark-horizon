@@ -81,11 +81,13 @@ export class UIManager {
    * @param {HTMLElement|null} restartBtn
    * @param {HTMLElement|null} finalScoreEl
    * @param {number} score
+   * @param {boolean} [preserveScroll=false]  If true, attempt to focus without causing page scroll.
    */
-  static showGameOver(gameOverScreen, restartBtn, finalScoreEl, score) {
+  static showGameOver(gameOverScreen, restartBtn, finalScoreEl, score, preserveScroll = false) {
     if (finalScoreEl) finalScoreEl.textContent = String(score);
     if (gameOverScreen) gameOverScreen.classList.remove("hidden");
-    UIManager.focusWithRetry(restartBtn);
+    if (preserveScroll) UIManager.focusPreserveScroll(restartBtn);
+    else UIManager.focusWithRetry(restartBtn);
   }
 
   /** Hide game over overlay.
@@ -161,6 +163,46 @@ export class UIManager {
           }, 100);
         }
       });
+    }
+  }
+
+  /** Try focusing an element while preserving the document scroll position.
+   * This attempts focus with {preventScroll:true} when supported, and as a
+   * fallback will save/restore scroll coordinates around a plain focus call
+   * so the act of focusing doesn't jump the page. Use this when you want the
+   * element to receive focus but still allow the user to scroll the overlay
+   * (e.g. leaderboard) immediately afterwards.
+   * @param {HTMLElement|null} el
+   */
+  static focusPreserveScroll(el) {
+    if (!el) return;
+    try {
+      // Try the modern API first.
+      el.focus({ preventScroll: true });
+      // If focus didn't take, fall through to the scroll-preserving trick.
+      if (document.activeElement === el) return;
+    } catch (_) {
+      // ignore
+    }
+    try {
+      const docEl = document.documentElement;
+      const body = document.body;
+      const scrollX = typeof window.scrollX === "number" ? window.scrollX : window.pageXOffset || 0;
+      const scrollY = typeof window.scrollY === "number" ? window.scrollY : window.pageYOffset || 0;
+      // If the document uses alternate scrolling containers capture their offsets
+      const docScrollTop = docEl ? docEl.scrollTop : 0;
+      const bodyScrollTop = body ? body.scrollTop : 0;
+      el.focus();
+      // Restore scroll position if it changed.
+      try {
+        window.scrollTo(scrollX, scrollY);
+        if (docEl) docEl.scrollTop = docScrollTop;
+        if (body) body.scrollTop = bodyScrollTop;
+      } catch (_) {
+        /* ignore */
+      }
+    } catch (_) {
+      /* ignore */
     }
   }
 
