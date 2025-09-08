@@ -278,10 +278,15 @@ export class LeaderboardManager {
    * Submit a score and persist top-N.
    * @param {number} score
    */
-  static submit(score) {
+  /**
+   * Submit a score and persist top-N.
+   * @param {number} score
+   * @param {string} userId
+   */
+  static submit(score, userId) {
     if (typeof score !== "number" || !Number.isFinite(score) || score <= 0) return false;
     const entries = LeaderboardManager.load();
-    const id = LeaderboardManager.makeId();
+    const id = userId && /^[A-Z]{3}$/.test(userId) ? userId : LeaderboardManager.makeId();
     const meta = LeaderboardManager.makeMeta();
     entries.push({ id, score: Math.floor(score), meta });
     // sort desc
@@ -306,9 +311,14 @@ export class LeaderboardManager {
     }
     entries.slice(0, 100).forEach((e, idx) => {
       const li = document.createElement("li");
-      // show #1/#2/#3... for all entries, compact stable short id, and score only
+      // show #1/#2/#3... for all entries, show 3-letter id if valid, else compact id
       const rank = `#${idx + 1}`;
-      const badge = LeaderboardManager.makeShortId(e.id || "");
+      let badge;
+      if (/^[A-Z]{3}$/.test(e.id)) {
+        badge = e.id;
+      } else {
+        badge = LeaderboardManager.makeShortId(e.id || "");
+      }
       li.textContent = `${rank} ${badge} — ${e.score}`;
       listEl.appendChild(li);
     });
