@@ -289,7 +289,9 @@ body {
   margin: 0 auto;
   padding-left: 0;
   max-width: 18rem;
-  max-height: calc(3 * 2.5em + 2 * var(--space-2)); /* 3 items + padding */
+  /* Make the scrollable area a hair smaller so exactly three entries are visible
+    across common font/line-height combinations. */
+  max-height: calc(3 * 2.3em + 2 * var(--space-2)); /* 3 items + padding */
   overflow-y: auto;
   scrollbar-width: thin;
 }
@@ -329,29 +331,35 @@ body {
   }
 }
 
-.leaderboard-status {
-  color: var(--color-text-secondary);
-  font-size: 0.9rem;
-  /* ensure spacing below the leaderboard equals the top spacing */
-  margin-top: var(--space-4);
-  min-height: 1.2em;
+#leaderboardList {
+  list-style-position: inside;
+  margin: 0 auto;
+  padding-left: 0;
+  max-width: 18rem;
+  /* Pixel-perfect: 3 rows visible. Each row is 48px tall and there are two gaps (between 3 items)
+     of var(--space-2) each. */
+  max-height: calc(3 * 48px + 2 * var(--space-2));
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
-
-/* About page visuals */
-.about-header {
+#leaderboardList li {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-1);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.95rem;
   text-align: center;
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-2);
+  /* Fixed height for pixel-perfect 3-row layout. Keep horizontal padding only. */
+  height: 48px;
+  padding: 0 var(--space-3);
 }
-
 /* Restore normal page scrolling and layout for the standalone about page. */
-.about-body {
-  /* Override global hidden overflow used during gameplay */
-  overflow: auto !important;
-}
-
 .about-page {
-  /* Use a simple centered column that scrolls when content is tall. Remove 100vh
-    to avoid mobile browser chrome/viewport quirks causing apparent offset. */
   display: block;
   /* Let height flow naturally instead of forcing 100vh */
   /* Use symmetric padding that also respects the larger safe-area inset so
