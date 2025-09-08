@@ -190,7 +190,7 @@ body {
   display: inline-block;
   text-decoration: none;
   font-weight: 600;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-2);
 }
 .action-link:focus-visible {
   outline: 3px solid var(--color-btn-focus-outline);
@@ -394,10 +394,10 @@ body {
   padding-left: 1.2em;
 }
 
-/* Left-align the Back link in the about page */
+/* Center the Back link in the about page */
 .about-content p.about-back {
-  /* Align the Back link with the main content column */
-  text-align: left;
+  /* Center the Back link within the main content column */
+  text-align: center;
   max-width: 720px;
   margin: 8px auto 0; /* same as other content blocks */
   padding-left: 0;
