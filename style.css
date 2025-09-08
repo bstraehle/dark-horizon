@@ -206,6 +206,18 @@ body {
   outline: 3px solid var(--color-btn-focus-outline) !important;
   outline-offset: -3px !important;
 }
+/* Mobile-only hint shown when programmatic focus is blocked; invites user to tap.
+   Visible only when the device is touch/coarse pointer via .mobile-only. */
+.mobile-focus-hint {
+  margin-top: 12px;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  opacity: 0.95;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-1);
+  padding: 8px 12px;
+}
 .action-link:hover {
   color: var(--color-text);
 }
@@ -474,6 +486,11 @@ body.about-body,
   }
   .about-header {
     margin-bottom: var(--space-3);
+  }
+  /* Give the about page title more equal breathing room on narrow screens */
+  .about-content h1 {
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-6);
   }
   .instructions {
     font-size: 0.98rem;

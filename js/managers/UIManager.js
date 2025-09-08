@@ -92,15 +92,60 @@ export class UIManager {
     // scroll-preserving focus method for a short period.
     if (preserveScroll) {
       UIManager._preserveFocus = true;
-      // Clear the preference after a short grace period.
+      // Clear the preference after a longer grace period so slower mobile
+      // browsers have time to accept focus after native prompts.
+      let preserveTimeout;
+      const clearPreserve = () => {
+        UIManager._preserveFocus = false;
+        try {
+          if (preserveTimeout) clearTimeout(preserveTimeout);
+        } catch (_) {
+          /* ignore */
+        }
+      };
       try {
-        setTimeout(() => {
+        preserveTimeout = setTimeout(() => {
           UIManager._preserveFocus = false;
-        }, 2000);
+        }, 5000);
       } catch (_) {
         UIManager._preserveFocus = false;
       }
+
+      // Attempt immediate focus (best-effort). If the browser requires a
+      // user gesture (common on Android) listen for the next interaction on
+      // the overlay and focus then. This preserves scrolling while still
+      // letting the button receive focus as soon as the user interacts.
       UIManager.focusPreserveScroll(restartBtn);
+      // If the browser blocks real focus, provide a visible fallback so
+      // users still see the Play/Restart button as the intended target.
+      try {
+        if (restartBtn && document.activeElement !== restartBtn) {
+          restartBtn.classList.add("js-force-focus");
+        }
+      } catch (_) {
+        /* ignore */
+      }
+      // Attempt clear visual indicator removal later if focus finally succeeds.
+      try {
+        const onFocusIn = () => {
+          try {
+            if (document.activeElement === restartBtn) {
+              try {
+                if (restartBtn) restartBtn.classList.remove("js-force-focus");
+              } catch (_) {
+                /* ignore */
+              }
+              clearPreserve();
+              document.removeEventListener("focusin", onFocusIn);
+            }
+          } catch (_) {
+            /* ignore */
+          }
+        };
+        document.addEventListener("focusin", onFocusIn);
+      } catch (_) {
+        /* ignore */
+      }
     } else {
       UIManager.focusWithRetry(restartBtn);
     }
