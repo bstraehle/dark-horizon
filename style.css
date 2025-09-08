@@ -376,6 +376,18 @@ body {
   max-width: 920px;
   text-align: center;
 }
+
+/* Allow the standalone about page to scroll and permit text selection.
+   The global `body { overflow: hidden }` rule is used for the game UI, so
+   override it specifically for pages that add `class="about-body"` on the
+   <body> element. */
+body.about-body,
+.about-body {
+  overflow: auto;
+  height: auto;
+  user-select: text;
+  -webkit-overflow-scrolling: touch; /* smooth momentum scrolling on iOS */
+}
 .about-content h1 {
   /* Reduce h1 margins and rely on the container's padding for vertical spacing */
   margin-top: 0;
