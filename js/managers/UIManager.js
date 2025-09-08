@@ -266,11 +266,13 @@ export class UIManager {
    */
   static ensureOverlayFocus(gameInfo, startBtn, gameOverScreen, restartBtn) {
     if (gameOverScreen && !gameOverScreen.classList.contains("hidden")) {
-      UIManager.focusWithRetry(restartBtn);
+      if (UIManager._preserveFocus) UIManager.focusPreserveScroll(restartBtn);
+      else UIManager.focusWithRetry(restartBtn);
       return;
     }
     if (gameInfo && !gameInfo.classList.contains("hidden")) {
-      UIManager.focusWithRetry(startBtn);
+      if (UIManager._preserveFocus) UIManager.focusPreserveScroll(startBtn);
+      else UIManager.focusWithRetry(startBtn);
       return;
     }
   }
@@ -345,7 +347,8 @@ export class UIManager {
       if (e.cancelable) e.preventDefault();
       e.stopPropagation();
     }
-    UIManager.focusWithRetry(startBtn);
+    if (UIManager._preserveFocus) UIManager.focusPreserveScroll(startBtn);
+    else UIManager.focusWithRetry(startBtn);
   }
 
   /** Focus guard while Game Over overlay is visible.
