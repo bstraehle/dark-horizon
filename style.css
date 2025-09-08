@@ -471,4 +471,8 @@ body.about-body,
   .instructions {
     font-size: 0.98rem;
   }
+  /* Slightly reduce h3 size on small screens for better visual balance */
+  .about-content h3 {
+    font-size: 1.2rem;
+  }
 }
