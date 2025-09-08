@@ -373,9 +373,8 @@ body {
   text-shadow: 0 0 20px var(--color-title-shadow);
 }
 
-.about-content h2,
 .about-content h3 {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   margin-top: var(--space-4);
   margin-bottom: var(--space-2);
   font-weight: 700;
