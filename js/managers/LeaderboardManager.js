@@ -4,7 +4,7 @@
  */
 export class LeaderboardManager {
   static KEY = "darkHorizonLeaderboard:v1";
-  static MAX_ENTRIES = 3;
+  static MAX_ENTRIES = 100;
 
   /**
    * Load leaderboard entries (safe).
@@ -304,14 +304,12 @@ export class LeaderboardManager {
       listEl.appendChild(li);
       return;
     }
-    const medals = ["🥇", "🥈", "🥉"];
-    entries.slice(0, LeaderboardManager.MAX_ENTRIES).forEach((e, idx) => {
+    entries.slice(0, 100).forEach((e, idx) => {
       const li = document.createElement("li");
-      // show medal (for top 3), compact stable short id, score, and device/browser text
-      const medal = medals[idx] || "";
+      // show #1/#2/#3... for all entries, compact stable short id, and score only
+      const rank = `#${idx + 1}`;
       const badge = LeaderboardManager.makeShortId(e.id || "");
-      const metaText = LeaderboardManager.metaToEmoji(e.meta || "");
-      li.textContent = `${medal ? `${medal} ` : ""}${badge} — ${e.score}${metaText ? ` (${metaText})` : ""}`;
+      li.textContent = `${rank} ${badge} — ${e.score}`;
       listEl.appendChild(li);
     });
     return;

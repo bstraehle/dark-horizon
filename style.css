@@ -289,6 +289,9 @@ body {
   margin: 0 auto;
   padding-left: 0;
   max-width: 18rem;
+  max-height: calc(3 * 2.5em + 2 * var(--space-2)); /* 3 items + padding */
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 #leaderboardList li {
   background: rgba(255, 255, 255, 0.02);
