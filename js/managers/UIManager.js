@@ -235,6 +235,13 @@ export class UIManager {
     // Allow links inside the game over overlay to be activated
     const targetIsLink = t && typeof t.closest === "function" && t.closest("a");
     if (targetIsLink) return;
+    // Allow interaction with leaderboard (for scrolling/touch)
+    const leaderboard = document.getElementById("leaderboardList");
+    const targetIsLeaderboard =
+      leaderboard &&
+      t &&
+      (t === leaderboard || (typeof t.closest === "function" && t.closest("#leaderboardList")));
+    if (targetIsLeaderboard) return;
     const targetIsRestart =
       t === restartBtn || (t && typeof t.closest === "function" && t.closest("#restartBtn"));
     if (!targetIsRestart) {
