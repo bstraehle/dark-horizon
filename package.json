@@ -1,8 +1,8 @@
 {
-  "name": "dark-horizon",
+  "name": "ai-horizon",
   "version": "1.0.0",
   "private": true,
-  "description": "Dark Horizon browser game",
+  "description": "AI Horizon browser game",
   "type": "module",
   "scripts": {
     "build": "esbuild js/game.js --bundle --minify --sourcemap --target=es2018 --outfile=dist/bundle.js",

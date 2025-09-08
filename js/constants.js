@@ -1,5 +1,5 @@
 /**
- * Dark Horizon game configuration constants.
+ * AI Horizon game configuration constants.
  * The exported object is deeply frozen to prevent accidental mutation at runtime.
  *
  * @constant

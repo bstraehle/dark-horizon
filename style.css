@@ -367,7 +367,7 @@ body {
 .about-content h1 {
   /* Reduce h1 margins and rely on the container's padding for vertical spacing */
   margin-top: 0;
-  margin-bottom: 0;
+  margin-bottom: var(--space-4);
   font-size: clamp(1.5rem, 3vw + 1rem, 2.5rem);
   text-align: center;
   text-shadow: 0 0 20px var(--color-title-shadow);
@@ -444,9 +444,6 @@ body {
   }
   .about-header {
     margin-bottom: var(--space-3);
-  }
-  .about-content h1 {
-    font-size: 1.4rem;
   }
   .instructions {
     font-size: 0.98rem;

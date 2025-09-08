@@ -1,7 +1,7 @@
 /**
- * DarkHorizon game logic.
+ * AI Horizon game logic.
  *
- * This file implements the Dark Horizon game, a browser-based arcade shooter.
+ * This file implements the AI Horizon game, a browser-based arcade shooter.
  * The player controls a ship, collects stars, and shoots asteroids for points.
  */
 

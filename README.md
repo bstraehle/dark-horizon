@@ -1,4 +1,4 @@
-# DARK HORIZON
+# AI HORIZON
 
 Fast, responsive space shooter built with HTML5 Canvas and vanilla JavaScript (ES modules). Collect stars, destroy asteroids, and chase a new high score — some asteroids are indestructible.
 
