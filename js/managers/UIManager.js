@@ -2,6 +2,8 @@
  * UIManager centralizes DOM updates and focus management for overlays and scores.
  */
 export class UIManager {
+  // When true prefer scroll-preserving focus calls while overlays are visible.
+  static _preserveFocus = false;
   /** Safe Element check for non-browser environments. */
   /**
    * Safe Element check for non-browser environments.
@@ -86,8 +88,22 @@ export class UIManager {
   static showGameOver(gameOverScreen, restartBtn, finalScoreEl, score, preserveScroll = false) {
     if (finalScoreEl) finalScoreEl.textContent = String(score);
     if (gameOverScreen) gameOverScreen.classList.remove("hidden");
-    if (preserveScroll) UIManager.focusPreserveScroll(restartBtn);
-    else UIManager.focusWithRetry(restartBtn);
+    // Remember caller preference so document-level focus guards use the
+    // scroll-preserving focus method for a short period.
+    if (preserveScroll) {
+      UIManager._preserveFocus = true;
+      // Clear the preference after a short grace period.
+      try {
+        setTimeout(() => {
+          UIManager._preserveFocus = false;
+        }, 2000);
+      } catch (_) {
+        UIManager._preserveFocus = false;
+      }
+      UIManager.focusPreserveScroll(restartBtn);
+    } else {
+      UIManager.focusWithRetry(restartBtn);
+    }
   }
 
   /** Hide game over overlay.
@@ -176,33 +192,69 @@ export class UIManager {
    */
   static focusPreserveScroll(el) {
     if (!el) return;
-    try {
-      // Try the modern API first.
-      el.focus({ preventScroll: true });
-      // If focus didn't take, fall through to the scroll-preserving trick.
-      if (document.activeElement === el) return;
-    } catch (_) {
-      // ignore
-    }
-    try {
-      const docEl = document.documentElement;
-      const body = document.body;
-      const scrollX = typeof window.scrollX === "number" ? window.scrollX : window.pageXOffset || 0;
-      const scrollY = typeof window.scrollY === "number" ? window.scrollY : window.pageYOffset || 0;
-      // If the document uses alternate scrolling containers capture their offsets
-      const docScrollTop = docEl ? docEl.scrollTop : 0;
-      const bodyScrollTop = body ? body.scrollTop : 0;
-      el.focus();
-      // Restore scroll position if it changed.
+    const tryFocus = () => {
       try {
-        window.scrollTo(scrollX, scrollY);
-        if (docEl) docEl.scrollTop = docScrollTop;
-        if (body) body.scrollTop = bodyScrollTop;
+        // Prefer focus with options when available to avoid scrolling.
+        el.focus({ preventScroll: true });
+      } catch (_) {
+        try {
+          // Save scroll then focus and restore to avoid jumps in browsers
+          // that don't honor preventScroll.
+          const scrollX =
+            typeof window.scrollX === "number" ? window.scrollX : window.pageXOffset || 0;
+          const scrollY =
+            typeof window.scrollY === "number" ? window.scrollY : window.pageYOffset || 0;
+          el.focus();
+          try {
+            window.scrollTo(scrollX, scrollY);
+          } catch (_) {
+            /* ignore */
+          }
+        } catch (_) {
+          /* ignore */
+        }
+      }
+      try {
+        if (document.activeElement !== el) {
+          // Attempt plain focus as last resort then restore scroll.
+          const scrollX =
+            typeof window.scrollX === "number" ? window.scrollX : window.pageXOffset || 0;
+          const scrollY =
+            typeof window.scrollY === "number" ? window.scrollY : window.pageYOffset || 0;
+          el.focus();
+          try {
+            window.scrollTo(scrollX, scrollY);
+          } catch (_) {
+            /* ignore */
+          }
+        }
       } catch (_) {
         /* ignore */
       }
-    } catch (_) {
-      /* ignore */
+    };
+
+    // Run initial attempt and a sequence of retries like focusWithRetry so
+    // mobile browsers that delay focusing still receive focus.
+    tryFocus();
+    if (document.activeElement !== el) {
+      requestAnimationFrame(() => {
+        tryFocus();
+        if (document.activeElement !== el) {
+          setTimeout(() => {
+            tryFocus();
+            if (document.activeElement !== el) {
+              setTimeout(() => {
+                tryFocus();
+                if (document.activeElement !== el) {
+                  setTimeout(() => {
+                    tryFocus();
+                  }, 750);
+                }
+              }, 250);
+            }
+          }, 100);
+        }
+      });
     }
   }
 
@@ -263,7 +315,10 @@ export class UIManager {
     if (overlayGameOverVisible) {
       const isRestart =
         t === restartBtn || (t && typeof t.closest === "function" && t.closest("#restartBtn"));
-      if (!isRestart) UIManager.focusWithRetry(restartBtn);
+      if (!isRestart) {
+        if (UIManager._preserveFocus) UIManager.focusPreserveScroll(restartBtn);
+        else UIManager.focusWithRetry(restartBtn);
+      }
       return;
     }
     if (overlayStartVisible) {
@@ -319,6 +374,7 @@ export class UIManager {
     if (!targetIsRestart) {
       // let the event continue so users can scroll/tap the leaderboard
     }
-    UIManager.focusWithRetry(restartBtn);
+    if (UIManager._preserveFocus) UIManager.focusPreserveScroll(restartBtn);
+    else UIManager.focusWithRetry(restartBtn);
   }
 }
