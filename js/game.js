@@ -979,16 +979,18 @@ class DarkHorizon {
     UIManager.hidePause(this.pauseScreen);
     // Submit score to local leaderboard and then show game over UI
     try {
-      let userId = null;
-      while (true) {
-        userId = prompt("Enter your 3-letter ID (A-Z):", "AAA");
-        if (userId === null) break; // user cancelled
-        userId = userId.trim().toUpperCase();
-        if (/^[A-Z]{3}$/.test(userId)) break;
-        alert("Please enter exactly 3 uppercase letters (A-Z).");
-      }
-      if (userId) {
-        LeaderboardManager.submit(this.score, userId);
+      if (this.score > 0) {
+        let userId = null;
+        while (true) {
+          userId = prompt("Enter your 3-letter ID (A-Z):", "AAA");
+          if (userId === null) break; // user cancelled
+          userId = userId.trim().toUpperCase();
+          if (/^[A-Z]{3}$/.test(userId)) break;
+          alert("Please enter exactly 3 uppercase letters (A-Z).");
+        }
+        if (userId) {
+          LeaderboardManager.submit(this.score, userId);
+        }
       }
     } catch (_e) {
       /* ignore */
