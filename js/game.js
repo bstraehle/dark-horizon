@@ -1001,6 +1001,15 @@ class DarkHorizon {
     } catch (_e) {
       /* ignore */
     }
+    // Render leaderboard first so the list is present before we show Game Over
+    try {
+      if (!this.leaderboardListEl)
+        this.leaderboardListEl = document.getElementById("leaderboardList");
+      LeaderboardManager.render(this.leaderboardListEl);
+    } catch (_e) {
+      /* ignore */
+    }
+
     this.showGameOver();
     // Clear the suppression after the Game Over UI is shown — allow a short
     // grace period so any prompt-induced resizes don't trigger a fullReset.
@@ -1011,13 +1020,7 @@ class DarkHorizon {
     } catch (_e) {
       this._suppressFullResetOnResize = false;
     }
-    try {
-      if (!this.leaderboardListEl)
-        this.leaderboardListEl = document.getElementById("leaderboardList");
-      LeaderboardManager.render(this.leaderboardListEl);
-    } catch (_e) {
-      /* ignore */
-    }
+    // (leaderboard already rendered above)
     if (this.loop) this.loop.stop();
   }
 

@@ -303,7 +303,8 @@ body {
   display: flex;
   font-weight: 600;
   font-size: 0.95rem;
-  /* center single-line entries like "No scores yet" and player names */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* smooth momentum scrolling on iOS */
   justify-content: center;
   text-align: center;
   margin-bottom: var(--space-2);
