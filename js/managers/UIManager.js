@@ -94,6 +94,7 @@ export class UIManager {
       UIManager._preserveFocus = true;
       // Clear the preference after a longer grace period so slower mobile
       // browsers have time to accept focus after native prompts.
+      /** @type {number|undefined} */
       let preserveTimeout;
       const clearPreserve = () => {
         UIManager._preserveFocus = false;
