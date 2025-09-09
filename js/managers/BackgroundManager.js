@@ -29,6 +29,40 @@ export class BackgroundManager {
   }
 
   /**
+   * Resize existing background state to match new canvas dimensions.
+   * If no prior state exists, return null to indicate caller should init.
+   * @param {{ view:{width:number,height:number}, running:boolean, isMobile:boolean, rng?: RNGLike, background?:{nebulaConfigs?:any, starField:any} }} ctxObj
+   * @param {{width:number,height:number}} prevView
+   * @returns {{ nebulaConfigs?: any, starField?: any } | null}
+   */
+  static resize(ctxObj, prevView) {
+    const { view, background } = ctxObj;
+    if (!view || !prevView) return null;
+    const prevW = prevView.width || 0;
+    const prevH = prevView.height || 0;
+    const newW = view.width || 0;
+    const newH = view.height || 0;
+    if (!background) return null;
+    const out = {};
+    // Scale nebula positions and radii proportionally when present
+    if (background.nebulaConfigs) {
+      try {
+        out.nebulaConfigs = Nebula.resize(background.nebulaConfigs, prevW, prevH, newW, newH);
+      } catch (_e) {
+        out.nebulaConfigs = background.nebulaConfigs;
+      }
+    }
+    if (background.starField) {
+      try {
+        out.starField = StarField.resize(background.starField, prevW, prevH, newW, newH);
+      } catch (_e) {
+        out.starField = background.starField;
+      }
+    }
+    return out;
+  }
+
+  /**
    * Draw the background using a GameContext-like object.
    * @param {{ ctx: CanvasRenderingContext2D, view: {width:number,height:number}, running:boolean, paused:boolean, animTime:number, timeSec?:number, dtSec?:number, background:{nebulaConfigs?:any, starField:any}, rng?: RNGLike }} ctxObj
    */

@@ -198,4 +198,38 @@ export class Nebula {
     }
     ctx.restore();
   }
+
+  /**
+   * Resize nebula configs from previous canvas size to new canvas size.
+   * Scales positions and radii proportionally and adjusts blob base offsets.
+   * @param {NebulaConfig[]} nebulaConfigs
+   * @param {number} prevW
+   * @param {number} prevH
+   * @param {number} newW
+   * @param {number} newH
+   * @returns {NebulaConfig[]}
+   */
+  static resize(nebulaConfigs, prevW, prevH, newW, newH) {
+    if (!nebulaConfigs || prevW <= 0 || prevH <= 0) return nebulaConfigs;
+    const sx = newW / prevW;
+    const sy = newH / prevH;
+    const sAvg = (sx + sy) / 2;
+    return nebulaConfigs.map((n) => {
+      const blobs = (n.blobs || []).map((b) => ({
+        ...b,
+        baseOx: (b.baseOx || 0) * sx,
+        baseOy: (b.baseOy || 0) * sy,
+        ox: (b.ox || 0) * sx,
+        oy: (b.oy || 0) * sy,
+        r: (b.r || 0) * sAvg,
+      }));
+      return {
+        ...n,
+        x: (n.x || 0) * sx,
+        y: (n.y || 0) * sy,
+        r: (n.r || 0) * sAvg,
+        blobs,
+      };
+    });
+  }
 }

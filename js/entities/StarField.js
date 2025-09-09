@@ -85,4 +85,28 @@ export class StarField {
     });
     ctx.restore();
   }
+
+  /**
+   * Resize an existing starField array proportionally from previous dimensions to new ones.
+   * Returns a new array reference with scaled x/y positions. Sizes and speeds are scaled by the
+   * average scale factor to preserve appearance.
+   * @param {StarData[]} starField
+   * @param {number} prevW
+   * @param {number} prevH
+   * @param {number} newW
+   * @param {number} newH
+   */
+  static resize(starField, prevW, prevH, newW, newH) {
+    if (!starField || prevW <= 0 || prevH <= 0) return starField;
+    const sx = newW / prevW;
+    const sy = newH / prevH;
+    const sAvg = (sx + sy) / 2;
+    return starField.map((s) => ({
+      x: s.x * sx,
+      y: s.y * sy,
+      size: Math.max(1, s.size * sAvg),
+      speed: s.speed * sAvg,
+      brightness: s.brightness,
+    }));
+  }
 }

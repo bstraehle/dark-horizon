@@ -605,6 +605,7 @@ class DarkHorizon {
       this._resizeScheduled = false;
       // Recompute size first
       const prevWidth = this.view.width || 0;
+      const prevHeight = this.view.height || 0;
       this.resizeCanvas();
 
       // Detect platform (mobile/desktop) change and perform a full reset when
@@ -628,18 +629,30 @@ class DarkHorizon {
       if (currentlyMobile !== this._isMobile || crossedBreakpoint) {
         this.fullReset();
       }
-      // Ensure nebula is not shown after a plain resize (match initial load)
-      // Some flows (fullReset) may force-generate a nebula; a normal resize
-      // should hide it and show the standard background like on page load.
+      // Prefer to update existing background state to match new canvas
+      // dimensions instead of fully reinitializing it. This preserves
+      // nebula and star positions and avoids visible jumps on resize.
       try {
-        this.nebulaConfigs = undefined;
+        // Use BackgroundManager.resize to adapt existing background state.
+        // Pass previous view so helper can scale positions/sizes correctly.
+        const prevView = { width: prevWidth, height: prevHeight };
+        const ctx = getGameContext(this);
+        const resized = BackgroundManager.resize(ctx, prevView);
+        if (resized) {
+          if (resized.nebulaConfigs) this.nebulaConfigs = resized.nebulaConfigs;
+          if (resized.starField) this.starField = resized.starField;
+        } else {
+          // Fallback to init if resize helper couldn't run (e.g., no prior state)
+          this.initBackground();
+        }
       } catch (_e) {
-        /* ignore in non-DOM/test envs */
-        void 0;
+        // ignore in non-DOM/test envs
+        try {
+          this.initBackground();
+        } catch (_err) {
+          void 0;
+        }
       }
-
-      // Recreate or redraw background to match new dimensions
-      this.initBackground();
       if (this.state.isPaused()) this._pausedFrameRendered = false;
       if (!this.state.isRunning()) {
         this.drawBackground();
@@ -1010,7 +1023,7 @@ class DarkHorizon {
           /* ignore */
         }
 
-        const trySubmit = () => {
+        const _trySubmit = () => {
           if (!initialsInput) return false;
           const raw = String(initialsInput.value || "")
             .trim()
