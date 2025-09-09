@@ -18,7 +18,8 @@
   --space-4: 16px;
   --space-5: 20px;
   --space-6: 24px;
-  --space-7: 40px;
+  --space-7: 32px;
+  --space-8: 40px;
 
   /* Radii */
   --radius-1: 4px;
@@ -33,6 +34,8 @@
     var(--color-btn-gradient-hover-start),
     var(--color-btn-gradient-hover-end)
   );
+  /* Page-vertical padding shared across game and standalone pages. */
+  --page-vertical: var(--space-6);
 }
 * {
   box-sizing: border-box;
@@ -73,7 +76,8 @@ body {
   right: 0;
   top: 0;
   padding: var(--space-2) var(--space-5);
-  padding-top: max(var(--space-3), env(safe-area-inset-top));
+  /* Use a shared, responsive vertical padding so top and bottom match across pages */
+  padding-top: max(var(--page-vertical), env(safe-area-inset-top));
   position: absolute;
   transform: translateZ(0);
   z-index: 999;
@@ -104,7 +108,8 @@ body {
   left: 0;
   right: 0;
   padding: var(--space-5);
-  padding-bottom: max(var(--space-5), env(safe-area-inset-bottom));
+  /* Use the shared vertical value for bottom padding as well */
+  padding-bottom: max(var(--page-vertical), env(safe-area-inset-bottom));
   position: fixed;
   transform: translateZ(0);
   z-index: 10;
@@ -121,7 +126,7 @@ body {
 }
 .instructions p {
   color: var(--color-text-secondary);
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-7);
 }
 .game-over-screen {
   align-items: center;
@@ -135,19 +140,20 @@ body {
   background: var(--color-bg);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-3);
-  padding: var(--space-7);
+  padding: var(--space-5);
   text-align: center;
 }
 .game-over-content h2 {
   color: var(--color-text);
-  font-size: clamp(1.5rem, 2.2vw + 1rem, 2.5rem);
-  margin-bottom: var(--space-7);
+  /* Match the responsive sizing used by the page h1 titles */
+  font-size: clamp(1.5rem, 3vw + 1rem, 2.5rem);
+  margin-bottom: var(--space-3);
   text-shadow: 0 0 20px var(--color-title-shadow);
 }
 .game-over-content p {
   color: var(--color-text-secondary);
   font-size: clamp(1.1rem, 1.2vw + 0.9rem, 1.5rem);
-  margin-bottom: var(--space-7);
+  margin-bottom: var(--space-6);
 }
 .action-button {
   background: var(--btn-bg);
@@ -183,14 +189,13 @@ body {
 }
 .action-group {
   display: block;
-  margin-top: var(--space-6);
   text-align: center;
 }
 
 .action-link {
   color: var(--color-text-secondary);
   display: inline-block;
-  margin-top: var(--space-3);
+  margin-top: var(--space-4);
   text-decoration: none;
   font-weight: 600;
   padding: var(--space-2) var(--space-3);
@@ -291,9 +296,8 @@ body {
 
 /* Leaderboard styles: match game-over card aesthetics and stay compact */
 .leaderboard {
-  margin-top: var(--space-4);
   /* match spacing below the leaderboard to the game-over card padding */
-  margin-bottom: var(--space-7);
+  margin-bottom: var(--space-5);
   text-align: center;
   color: var(--color-text-secondary);
 }
@@ -384,8 +388,9 @@ body {
   /* Let height flow naturally instead of forcing 100vh */
   /* Use symmetric padding that also respects the larger safe-area inset so
     top and bottom remain visually equal on notched devices. */
-  padding-top: max(var(--space-6), env(safe-area-inset-top), env(safe-area-inset-bottom));
-  padding-bottom: max(var(--space-6), env(safe-area-inset-top), env(safe-area-inset-bottom));
+  /* Use the same shared vertical padding so the about page matches the game UI */
+  padding-top: max(var(--page-vertical), env(safe-area-inset-top), env(safe-area-inset-bottom));
+  padding-bottom: max(var(--page-vertical), env(safe-area-inset-top), env(safe-area-inset-bottom));
   padding-left: var(--space-5);
   padding-right: var(--space-5);
   box-sizing: border-box;
@@ -431,7 +436,7 @@ body.about-body,
   text-align: left;
   max-width: 720px;
   margin: 8px auto 0;
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-4);
   color: var(--color-text-secondary);
 }
 .about-content p {
@@ -498,7 +503,7 @@ body.about-body,
   /* Give the about page title more equal breathing room on narrow screens */
   .about-content h1 {
     margin-top: var(--space-6);
-    margin-bottom: var(--space-7);
+    margin-bottom: var(--space-8);
   }
   .instructions {
     font-size: 0.98rem;
