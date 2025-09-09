@@ -83,6 +83,24 @@
       <div class="game-over-content">
         <h2 id="gameOverTitle">GAME OVER</h2>
         <p>Score: <span id="finalScore">0</span></p>
+        <div class="initials-entry hidden" aria-hidden="false">
+          <label id="initialsLabel" for="initialsInput" class="initials-label"
+            >Enter your 3-letter initials</label
+          >
+          <input
+            id="initialsInput"
+            class="initials-input"
+            type="text"
+            maxlength="3"
+            inputmode="text"
+            autocomplete="off"
+            placeholder="AAA"
+            aria-labelledby="initialsLabel"
+          />
+          <button id="submitScoreBtn" class="action-button" type="button" aria-label="Submit Score">
+            Submit
+          </button>
+        </div>
         <div id="leaderboard" class="leaderboard" aria-live="polite">
           <ol id="leaderboardList"></ol>
         </div>
@@ -92,7 +110,6 @@
           type="button"
           tabindex="0"
           aria-label="Play Again"
-          autofocus
         >
           Play Again
         </button>

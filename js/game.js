@@ -981,26 +981,133 @@ class DarkHorizon {
     // Ensure pause overlay is hidden if game ends while paused
     UIManager.hidePause(this.pauseScreen);
     // Submit score to local leaderboard and then show game over UI.
-    // Track whether the user actually submitted a 3-letter ID so we can
-    // preserve scroll when focusing the Play Again button.
-    let userId = null;
+    // Use a DOM input/submit button (no native prompt). Track whether the
+    // user submitted a valid 3-letter ID so we can preserve scroll when
+    // focusing the Play Again button.
     let submittedScore = false;
     try {
       if (this.score > 0) {
         // Suppress fullReset triggered by transient viewport/resize changes
-        // while the native prompt is active on some mobile browsers.
+        // while any native prompt replacement UI is active on some mobile browsers.
         this._suppressFullResetOnResize = true;
-        userId = null;
-        while (true) {
-          userId = prompt("Enter your 3-letter ID (A-Z):", "AAA");
-          if (userId === null) break; // user cancelled
-          userId = userId.trim().toUpperCase();
-          if (/^[A-Z]{3}$/.test(userId)) break;
-          alert("Please enter exactly 3 uppercase letters (A-Z).");
+        // Ensure leaderboard element exists for rendering below.
+        if (!this.leaderboardListEl)
+          this.leaderboardListEl = document.getElementById("leaderboardList");
+
+        // Wire up initials input + submit button if present in DOM.
+        const initialsEntry = document.querySelector(".initials-entry");
+        const initialsInput = /** @type {HTMLInputElement|null} */ (
+          document.getElementById("initialsInput")
+        );
+        const submitBtn = /** @type {HTMLButtonElement|null} */ (
+          document.getElementById("submitScoreBtn")
+        );
+
+        // Only show initials UI when the score is > 0. Otherwise keep it hidden.
+        try {
+          if (initialsEntry) {
+            if (this.score > 0) initialsEntry.classList.remove("hidden");
+            else initialsEntry.classList.add("hidden");
+          }
+        } catch (_e) {
+          /* ignore */
         }
-        if (userId) {
-          LeaderboardManager.submit(this.score, userId);
-          submittedScore = true;
+
+        const trySubmit = () => {
+          if (!initialsInput) return false;
+          const raw = String(initialsInput.value || "")
+            .trim()
+            .toUpperCase();
+          if (/^[A-Z]{3}$/.test(raw)) {
+            try {
+              LeaderboardManager.submit(this.score, raw);
+              submittedScore = true;
+              // clear input to indicate success
+              initialsInput.value = "";
+            } catch (_e) {
+              /* ignore */
+            }
+            return true;
+          }
+          // simple inline feedback: briefly add an invalid class
+          try {
+            if (initialsInput) {
+              initialsInput.classList.add("invalid");
+              setTimeout(() => initialsInput.classList.remove("invalid"), 900);
+              initialsInput.focus({ preventScroll: true });
+            }
+          } catch (_e) {
+            /* ignore */
+          }
+          return false;
+        };
+
+        if (submitBtn && initialsInput) {
+          // Prevent double-binding if gameOver called repeatedly
+          /** @param {MouseEvent} e */
+          const onClick = (e) => {
+            e.preventDefault();
+            if (trySubmit()) {
+              try {
+                // Re-render leaderboard after successful submit
+                LeaderboardManager.render(this.leaderboardListEl);
+              } catch (_e) {
+                /* ignore */
+              }
+              // Hide the input and submit button after submit
+              try {
+                initialsInput.classList.add("hidden");
+                submitBtn.classList.add("hidden");
+                const initialsLabel = document.getElementById("initialsLabel");
+                if (initialsLabel) initialsLabel.classList.add("hidden");
+              } catch (_e) {
+                /* ignore */
+              }
+              // Focus Play Again button so user can restart quickly
+              try {
+                UIManager.focusWithRetry(this.restartBtn);
+              } catch (_e) {
+                /* ignore */
+              }
+            } else {
+              // If not valid, ensure the leaderboard is still updated visually
+              try {
+                LeaderboardManager.render(this.leaderboardListEl);
+              } catch (_e) {
+                /* ignore */
+              }
+            }
+          };
+          submitBtn.addEventListener("click", onClick);
+
+          // Also allow Enter key on the input to submit
+          /** @param {KeyboardEvent} ev */
+          const onKey = (ev) => {
+            if (ev.key === "Enter") {
+              ev.preventDefault();
+              if (trySubmit()) {
+                try {
+                  LeaderboardManager.render(this.leaderboardListEl);
+                } catch (_e) {
+                  /* ignore */
+                }
+                try {
+                  initialsInput.classList.add("hidden");
+                  submitBtn.classList.add("hidden");
+                  const initialsLabel = document.getElementById("initialsLabel");
+                  if (initialsLabel) initialsLabel.classList.add("hidden");
+                } catch (_e) {
+                  /* ignore */
+                }
+                try {
+                  UIManager.focusWithRetry(this.restartBtn);
+                } catch (_e) {
+                  /* ignore */
+                }
+              }
+            }
+          };
+          initialsInput.addEventListener("keydown", onKey);
         }
       }
     } catch (_e) {

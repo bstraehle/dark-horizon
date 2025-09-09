@@ -319,7 +319,10 @@ export class LeaderboardManager {
       } else {
         badge = LeaderboardManager.makeShortId(e.id || "");
       }
-      li.textContent = `${rank} ${badge} — ${e.score}`;
+      // Prefix top 3 with medal emojis: gold, silver, bronze
+      const medals = ["🥇", "🥈", "🥉"];
+      const medalPrefix = idx >= 0 && idx < 3 ? medals[idx] + " " : "";
+      li.textContent = `${medalPrefix}${rank} ${badge} — ${e.score}`;
       listEl.appendChild(li);
     });
     return;
