@@ -1108,6 +1108,8 @@ class DarkHorizon {
           // Prevent double-binding if gameOver called repeatedly
           /** @param {MouseEvent} e */
           const onClick = (e) => {
+            // Prevent double submission if a pointerdown already submitted
+            if (submittedScore) return;
             e.preventDefault();
             try {
               // Read raw initials and submit only if valid (1-3 A-Z)
@@ -1150,6 +1152,27 @@ class DarkHorizon {
             }
           };
           submitBtn.addEventListener("click", onClick);
+          // Some browsers/firefox may fire focusout before click when the user
+          // taps the submit button. Attach a pointerdown handler that submits
+          // earlier in the event order to avoid a race where the input is
+          // hidden before the click handler runs.
+          try {
+            submitBtn.addEventListener("pointerdown", (ev) => {
+              if (submittedScore) return;
+              try {
+                ev.preventDefault();
+              } catch (_) {
+                /* ignore */
+              }
+              try {
+                onClick(ev);
+              } catch (_) {
+                /* ignore */
+              }
+            });
+          } catch (_e) {
+            /* ignore */
+          }
 
           // Also allow Enter key on the input to submit
           /** @param {KeyboardEvent} ev */
