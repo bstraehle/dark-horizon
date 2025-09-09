@@ -619,16 +619,13 @@ class DarkHorizon {
         (prevWidth < BREAKPOINT && newWidth >= BREAKPOINT) ||
         (prevWidth >= BREAKPOINT && newWidth < BREAKPOINT);
 
-      // If platform hint changed, layout breakpoint crossed, or we're on
-      // mobile and the user is currently at Game Over, perform a full
-      // reset so the start/menu overlay ("Launch Mission") is shown.
-      // This keeps mobile behavior consistent with desktop where a
-      // layout/platform change returns the UI to the initial menu.
-      if (
-        currentlyMobile !== this._isMobile ||
-        crossedBreakpoint ||
-        (currentlyMobile && this.state.isGameOver() && !this._suppressFullResetOnResize)
-      ) {
+      // If platform hint changed or layout breakpoint crossed, perform a
+      // full reset so the start/menu overlay ("Launch Mission") is shown.
+      // NOTE: we intentionally do NOT trigger a full reset merely because
+      // the user is at Game Over and the viewport resized. That behavior
+      // previously returned players to the start screen on transient
+      // resizes (e.g. native prompts or keyboard), which is undesirable.
+      if (currentlyMobile !== this._isMobile || crossedBreakpoint) {
         this.fullReset();
       }
       // Ensure nebula is not shown after a plain resize (match initial load)
@@ -1043,6 +1040,31 @@ class DarkHorizon {
         };
 
         if (submitBtn && initialsInput) {
+          // Normalize input to uppercase as the user types while preserving caret
+          // position. This provides immediate visual feedback and keeps the
+          // underlying value consistent for submission.
+          /** @type {(e: Event) => void | undefined} */
+          let onInput;
+          try {
+            /** @param {Event} e */
+            onInput = (e) => {
+              try {
+                const el = /** @type {HTMLInputElement} */ (e.target);
+                const start = el.selectionStart;
+                const end = el.selectionEnd;
+                el.value = el.value.toUpperCase();
+                // Restore selection if possible
+                if (typeof start === "number" && typeof end === "number") {
+                  el.setSelectionRange(start, end);
+                }
+              } catch (_err) {
+                /* ignore */
+              }
+            };
+            initialsInput.addEventListener("input", onInput);
+          } catch (_e) {
+            /* ignore */
+          }
           // Prevent double-binding if gameOver called repeatedly
           /** @param {MouseEvent} e */
           const onClick = (e) => {
@@ -1108,6 +1130,22 @@ class DarkHorizon {
             }
           };
           initialsInput.addEventListener("keydown", onKey);
+          // When hiding the input after a successful submit, listeners are
+          // removed by replacing the element's class; if needed, remove the
+          // input listener here when the input is hidden to avoid leaks.
+          const cleanupInput = () => {
+            try {
+              if (onInput) initialsInput.removeEventListener("input", onInput);
+            } catch (_err) {
+              /* ignore */
+            }
+          };
+          // Ensure cleanup when submit is clicked and succeeds
+          const _originalOnClick = submitBtn.onclick;
+          submitBtn.addEventListener("click", () => {
+            // small timeout to allow other handlers to run then cleanup
+            setTimeout(cleanupInput, 0);
+          });
         }
       }
     } catch (_e) {

@@ -155,6 +155,41 @@ body {
   font-size: clamp(1.1rem, 1.2vw + 0.9rem, 1.5rem);
   margin-bottom: var(--space-6);
 }
+
+/* Space below the initials input and its submit button inside the Game Over card */
+.initials-entry {
+  /* Stack label, input and button vertically and center them */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.initials-entry .initials-label {
+  display: block;
+  margin-bottom: var(--space-5);
+  text-align: center;
+}
+.initials-entry .initials-input,
+.initials-entry .action-button {
+  margin-bottom: var(--space-5);
+}
+
+/* Make the initials input visually compact but wide enough for three letters.
+   Use ch units so width tracks character width and center the text. Use
+   text-transform to display uppercase; additionally JS will normalize the
+   underlying value to uppercase on input for consistency. */
+.initials-entry .initials-input {
+  width: 8ch; /* fits three uppercase letters plus a bit of padding */
+  max-width: 12rem;
+  padding: 6px 8px;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase; /* display uppercase even when user types lowercase */
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-1);
+  background: rgba(255, 255, 255, 0.01);
+  color: var(--color-text);
+}
 .action-button {
   background: var(--btn-bg);
   border: none;
