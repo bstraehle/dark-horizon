@@ -1096,35 +1096,44 @@ class DarkHorizon {
           /** @param {MouseEvent} e */
           const onClick = (e) => {
             e.preventDefault();
-            if (trySubmit()) {
-              try {
-                // Re-render leaderboard after successful submit
-                LeaderboardManager.render(this.leaderboardListEl);
-              } catch (_e) {
-                /* ignore */
+            try {
+              // Read raw initials and submit only if valid (1-3 A-Z)
+              const raw = initialsInput
+                ? String(initialsInput.value || "")
+                    .trim()
+                    .toUpperCase()
+                : "";
+              if (/^[A-Z]{1,3}$/.test(raw)) {
+                try {
+                  LeaderboardManager.submit(this.score, raw);
+                  submittedScore = true;
+                  if (initialsInput) initialsInput.value = "";
+                } catch (_e) {
+                  /* ignore */
+                }
               }
-              // Hide the input and submit button after submit
-              try {
-                initialsInput.classList.add("hidden");
-                submitBtn.classList.add("hidden");
-                const initialsLabel = document.getElementById("initialsLabel");
-                if (initialsLabel) initialsLabel.classList.add("hidden");
-              } catch (_e) {
-                /* ignore */
-              }
-              // Focus Play Again button so user can restart quickly
-              try {
-                UIManager.focusWithRetry(this.restartBtn);
-              } catch (_e) {
-                /* ignore */
-              }
-            } else {
-              // If not valid, ensure the leaderboard is still updated visually
-              try {
-                LeaderboardManager.render(this.leaderboardListEl);
-              } catch (_e) {
-                /* ignore */
-              }
+            } catch (_e) {
+              /* ignore */
+            }
+            // Re-render leaderboard and then hide the initials UI regardless
+            try {
+              LeaderboardManager.render(this.leaderboardListEl);
+            } catch (_e) {
+              /* ignore */
+            }
+            try {
+              if (initialsInput) initialsInput.classList.add("hidden");
+              if (submitBtn) submitBtn.classList.add("hidden");
+              const initialsLabel = document.getElementById("initialsLabel");
+              if (initialsLabel) initialsLabel.classList.add("hidden");
+            } catch (_e) {
+              /* ignore */
+            }
+            // Focus Play Again button so user can restart quickly
+            try {
+              UIManager.focusWithRetry(this.restartBtn);
+            } catch (_e) {
+              /* ignore */
             }
           };
           submitBtn.addEventListener("click", onClick);
@@ -1134,25 +1143,41 @@ class DarkHorizon {
           const onKey = (ev) => {
             if (ev.key === "Enter") {
               ev.preventDefault();
-              if (trySubmit()) {
-                try {
-                  LeaderboardManager.render(this.leaderboardListEl);
-                } catch (_e) {
-                  /* ignore */
+              try {
+                const raw = initialsInput
+                  ? String(initialsInput.value || "")
+                      .trim()
+                      .toUpperCase()
+                  : "";
+                if (/^[A-Z]{1,3}$/.test(raw)) {
+                  try {
+                    LeaderboardManager.submit(this.score, raw);
+                    submittedScore = true;
+                    if (initialsInput) initialsInput.value = "";
+                  } catch (_e) {
+                    /* ignore */
+                  }
                 }
-                try {
-                  initialsInput.classList.add("hidden");
-                  submitBtn.classList.add("hidden");
-                  const initialsLabel = document.getElementById("initialsLabel");
-                  if (initialsLabel) initialsLabel.classList.add("hidden");
-                } catch (_e) {
-                  /* ignore */
-                }
-                try {
-                  UIManager.focusWithRetry(this.restartBtn);
-                } catch (_e) {
-                  /* ignore */
-                }
+              } catch (_e) {
+                /* ignore */
+              }
+              try {
+                LeaderboardManager.render(this.leaderboardListEl);
+              } catch (_e) {
+                /* ignore */
+              }
+              try {
+                if (initialsInput) initialsInput.classList.add("hidden");
+                if (submitBtn) submitBtn.classList.add("hidden");
+                const initialsLabel = document.getElementById("initialsLabel");
+                if (initialsLabel) initialsLabel.classList.add("hidden");
+              } catch (_e) {
+                /* ignore */
+              }
+              try {
+                UIManager.focusWithRetry(this.restartBtn);
+              } catch (_e) {
+                /* ignore */
               }
             }
           };

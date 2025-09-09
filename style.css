@@ -134,7 +134,8 @@ body {
   inset: 0;
   justify-content: center;
   position: fixed;
-  z-index: 100;
+  /* Ensure Game Over overlay appears above fixed headers / score displays (which use z-index up to 999) */
+  z-index: 2000;
 }
 .game-over-content {
   background: var(--color-bg);
