@@ -1195,6 +1195,57 @@ class DarkHorizon {
             }
           };
           initialsInput.addEventListener("keydown", onKey);
+          // Hide the initials UI when the input loses focus unless focus
+          // moved to the submit button (user clicked Submit). Use focusout
+          // which bubbles and provides relatedTarget on modern browsers.
+          /** @param {FocusEvent} ev */
+          const onFocusOut = (ev) => {
+            try {
+              const related = /** @type {HTMLElement|null} */ (
+                // relatedTarget may be null in some environments; fall back
+                // to document.activeElement for best-effort detection.
+                (ev && /** @type {any} */ (ev).relatedTarget) || document.activeElement
+              );
+              const movedToSubmit =
+                related === submitBtn ||
+                (related &&
+                  typeof related.closest === "function" &&
+                  related.closest("#submitScoreBtn"));
+              const movedToInitials =
+                related === initialsInput ||
+                (related &&
+                  typeof related.closest === "function" &&
+                  related.closest("#initialsInput"));
+              if (!movedToSubmit && !movedToInitials) {
+                try {
+                  if (initialsInput) initialsInput.classList.add("hidden");
+                  if (submitBtn) submitBtn.classList.add("hidden");
+                  const initialsLabel = document.getElementById("initialsLabel");
+                  if (initialsLabel) initialsLabel.classList.add("hidden");
+                } catch (_e) {
+                  /* ignore */
+                }
+                try {
+                  // Remove input listeners to avoid leaks
+                  cleanupInput();
+                } catch (_err) {
+                  /* ignore */
+                }
+                try {
+                  initialsInput.removeEventListener("focusout", onFocusOut);
+                } catch (_err) {
+                  /* ignore */
+                }
+              }
+            } catch (_e) {
+              /* ignore */
+            }
+          };
+          try {
+            initialsInput.addEventListener("focusout", onFocusOut);
+          } catch (_e) {
+            /* ignore */
+          }
           // When hiding the input after a successful submit, listeners are
           // removed by replacing the element's class; if needed, remove the
           // input listener here when the input is hidden to avoid leaks.
