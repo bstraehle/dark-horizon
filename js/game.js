@@ -1015,7 +1015,8 @@ class DarkHorizon {
           const raw = String(initialsInput.value || "")
             .trim()
             .toUpperCase();
-          if (/^[A-Z]{3}$/.test(raw)) {
+          // Allow 1 to 3 letters (previously required exactly 3)
+          if (/^[A-Z]{1,3}$/.test(raw)) {
             try {
               LeaderboardManager.submit(this.score, raw);
               submittedScore = true;
@@ -1047,15 +1048,41 @@ class DarkHorizon {
           let onInput;
           try {
             /** @param {Event} e */
+            // Normalize input live: strip any non-letter characters, uppercase,
+            // and cap to 3 characters while preserving the caret position.
             onInput = (e) => {
               try {
                 const el = /** @type {HTMLInputElement} */ (e.target);
-                const start = el.selectionStart;
-                const end = el.selectionEnd;
-                el.value = el.value.toUpperCase();
-                // Restore selection if possible
-                if (typeof start === "number" && typeof end === "number") {
-                  el.setSelectionRange(start, end);
+                const raw = String(el.value || "");
+                const start = el.selectionStart || 0;
+                const end = el.selectionEnd || 0;
+                // Filter to letters A-Z only, then uppercase and limit to 3 chars
+                const filtered = raw
+                  .replace(/[^a-zA-Z]/g, "")
+                  .toUpperCase()
+                  .slice(0, 3);
+                if (el.value !== filtered) {
+                  // Compute new caret position: move left by the number of removed
+                  // chars before the original caret. This is a best-effort that
+                  // handles common editing scenarios.
+                  const removedBeforeCaret = raw.slice(0, start).replace(/[a-zA-Z]/g, "").length;
+                  const newPos = Math.max(0, start - removedBeforeCaret);
+                  el.value = filtered;
+                  try {
+                    el.setSelectionRange(newPos, newPos);
+                  } catch (_) {
+                    // ignore if selection can't be set
+                  }
+                } else {
+                  // Value unchanged except maybe case; ensure uppercase and restore selection
+                  el.value = filtered;
+                  try {
+                    if (typeof start === "number" && typeof end === "number") {
+                      el.setSelectionRange(start, end);
+                    }
+                  } catch (_) {
+                    /* ignore */
+                  }
                 }
               } catch (_err) {
                 /* ignore */

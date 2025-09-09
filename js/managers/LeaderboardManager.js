@@ -286,7 +286,8 @@ export class LeaderboardManager {
   static submit(score, userId) {
     if (typeof score !== "number" || !Number.isFinite(score) || score <= 0) return false;
     const entries = LeaderboardManager.load();
-    const id = userId && /^[A-Z]{3}$/.test(userId) ? userId : LeaderboardManager.makeId();
+    // Accept 1 to 3 uppercase letters as a valid user-supplied id
+    const id = userId && /^[A-Z]{1,3}$/.test(userId) ? userId : LeaderboardManager.makeId();
     const meta = LeaderboardManager.makeMeta();
     entries.push({ id, score: Math.floor(score), meta });
     // sort desc
@@ -314,7 +315,8 @@ export class LeaderboardManager {
       // show #1/#2/#3... for all entries, show 3-letter id if valid, else compact id
       const rank = `#${idx + 1}`;
       let badge;
-      if (/^[A-Z]{3}$/.test(e.id)) {
+      // If the stored id is 1-3 uppercase letters, show it verbatim as initials.
+      if (/^[A-Z]{1,3}$/.test(e.id)) {
         badge = e.id;
       } else {
         badge = LeaderboardManager.makeShortId(e.id || "");
