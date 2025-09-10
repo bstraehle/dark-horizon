@@ -321,10 +321,12 @@ export class LeaderboardManager {
       } else {
         badge = LeaderboardManager.makeShortId(e.id || "");
       }
-      // Prefix top 3 with medal emojis: gold, silver, bronze
+      // Prefix top 3 with medal emojis: gold, silver, bronze.
+      // For ranks outside the top 3, prefix the rank with a thumbs up emoji.
       const medals = ["🥇", "🥈", "🥉"];
       const medalPrefix = idx >= 0 && idx < 3 ? medals[idx] + " " : "";
-      li.textContent = `${medalPrefix}${rank} ${badge} — ${e.score}`;
+      const outsideTopThreePrefix = idx >= 3 ? "👍 " : "";
+      li.textContent = `${medalPrefix}${outsideTopThreePrefix}${rank} ${badge} — ${e.score}`;
       listEl.appendChild(li);
     });
     return;
