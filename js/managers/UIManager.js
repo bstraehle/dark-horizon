@@ -502,6 +502,9 @@ export class UIManager {
       return;
     }
     if (overlayStartVisible) {
+      // Allow links (e.g. About) inside the overlay to receive focus via keyboard
+      const targetIsLink = t && typeof t.closest === "function" && t.closest("a");
+      if (targetIsLink) return;
       const isStart =
         t === startBtn || (t && typeof t.closest === "function" && t.closest("#startBtn"));
       if (!isStart) UIManager.focusWithRetry(startBtn);
@@ -516,15 +519,35 @@ export class UIManager {
   static handleStartScreenFocusGuard(e, gameInfo, startBtn) {
     if (!gameInfo || gameInfo.classList.contains("hidden")) return;
     const t = UIManager.isElement(e && e.target) ? /** @type {Element} */ (e.target) : null;
-    // Allow links (e.g. About) inside the overlay to be activated
+    // Allow links (e.g. About) inside the overlay to be activated.
+    // For blur events, the event target is the element losing focus, so
+    // inspect the relatedTarget (or document.activeElement) to determine
+    // where focus moved. If focus moved to an anchor inside the overlay,
+    // don't yank it back.
     const targetIsLink = t && typeof t.closest === "function" && t.closest("a");
-    if (targetIsLink) return;
     const targetIsStart =
       t === startBtn || (t && typeof t.closest === "function" && t.closest("#startBtn"));
+
+    if (e.type === "blur") {
+      // FocusEvent may provide relatedTarget; fall back to document.activeElement
+      const related = /** @type {HTMLElement|null} */ (
+        (e && /** @type {any} */ (e).relatedTarget) || document.activeElement
+      );
+      const movedToLink = related && typeof related.closest === "function" && related.closest("a");
+      const movedInsideOverlay = gameInfo && related && gameInfo.contains(related);
+      if (movedToLink && movedInsideOverlay) {
+        // Allow tab/shift+tab to move focus to anchors inside the overlay.
+        return;
+      }
+    }
+
+    // For non-blur interactions (mousedown/touchstart) prevent interaction
+    // with non-start targets and restore focus to the start button.
     if (!targetIsStart) {
       if (e.cancelable) e.preventDefault();
       e.stopPropagation();
     }
+
     if (UIManager._preserveFocus) UIManager.focusPreserveScroll(startBtn);
     else UIManager.focusWithRetry(startBtn);
   }
