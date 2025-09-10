@@ -541,8 +541,13 @@ export class UIManager {
       }
     }
 
-    // For non-blur interactions (mousedown/touchstart) prevent interaction
-    // with non-start targets and restore focus to the start button.
+    // For non-blur interactions (mousedown/touchstart) allow interaction
+    // with links (e.g. About) inside the overlay. Otherwise prevent
+    // interaction with non-start targets and restore focus to the start
+    // button.
+    if (targetIsLink) {
+      return;
+    }
     if (!targetIsStart) {
       if (e.cancelable) e.preventDefault();
       e.stopPropagation();
