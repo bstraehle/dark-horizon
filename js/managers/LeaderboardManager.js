@@ -140,67 +140,6 @@ export class LeaderboardManager {
   }
 
   /**
-   * Deterministic, non-PII display name derived from the client id.
-   * Produces names like "Crimson Falcon #42" so the top-10 list is friendlier.
-   * @param {string} id
-   * @returns {string}
-   */
-  static makeDisplayName(id) {
-    try {
-      if (!id) return "Player";
-      const adjs = [
-        "Crimson",
-        "Silent",
-        "Quantum",
-        "Nebula",
-        "Dusky",
-        "Azure",
-        "Solar",
-        "Atomic",
-        "Iron",
-        "Velvet",
-        "Lucky",
-        "Ghost",
-        "Rapid",
-        "Stellar",
-        "Obsidian",
-        "Radiant",
-      ];
-      const nouns = [
-        "Falcon",
-        "Warden",
-        "Runner",
-        "Raven",
-        "Voyager",
-        "Drifter",
-        "Pilot",
-        "Nomad",
-        "Mender",
-        "Strider",
-        "Corsair",
-        "Seeker",
-        "Rider",
-        "Shade",
-        "Specter",
-        "Anchor",
-      ];
-      // simple signed hash
-      let h = 0;
-      for (let i = 0; i < id.length; i++) {
-        h = (h << 5) - h + id.charCodeAt(i);
-        h |= 0;
-      }
-      const n = Math.abs(h) >>> 0;
-      const adj = adjs[n % adjs.length];
-      const noun = nouns[(n >>> 8) % nouns.length];
-      const num = (n >>> 16) % 100;
-      return `${adj} ${noun} #${String(num).padStart(2, "0")}`;
-    } catch (_) {
-      return "Player";
-    }
-  }
-
-  /**
    * Make a short deterministic badge: color emoji + two-digit number (e.g. "🔴#42").
    * Derived from the client id only (no PII).
    * @param {string} id
