@@ -1107,6 +1107,43 @@ class DarkHorizon {
           }
           // Prevent double-binding if gameOver called repeatedly
           /** @param {MouseEvent} e */
+          // Shared cleanup and hide helpers so both click and Enter can hide
+          // the initials UI consistently.
+          /** @type {((ev: FocusEvent) => void)|null} */
+          let onFocusOut = null;
+          const cleanupInput = () => {
+            try {
+              if (onInput) initialsInput.removeEventListener("input", onInput);
+            } catch (_err) {
+              /* ignore */
+            }
+          };
+
+          const hideInitialsUI = () => {
+            try {
+              if (initialsInput) initialsInput.classList.add("hidden");
+              if (submitBtn) submitBtn.classList.add("hidden");
+              const initialsLabel = document.getElementById("initialsLabel");
+              if (initialsLabel) initialsLabel.classList.add("hidden");
+            } catch (_err) {
+              /* ignore */
+            }
+            try {
+              cleanupInput();
+            } catch (_err) {
+              /* ignore */
+            }
+            try {
+              if (initialsInput && onFocusOut) {
+                const fn = /** @type {(ev: FocusEvent) => void} */ (onFocusOut);
+                initialsInput.removeEventListener("focusout", fn);
+              }
+            } catch (_err) {
+              /* ignore */
+            }
+          };
+
+          /** @param {MouseEvent} e */
           const onClick = (e) => {
             // Prevent double submission if a pointerdown already submitted
             if (submittedScore) return;
@@ -1130,17 +1167,19 @@ class DarkHorizon {
             } catch (_e) {
               /* ignore */
             }
-            // Re-render leaderboard and then hide the initials UI regardless
+            // Re-render leaderboard. Hide initials UI only when the Submit
+            // button was clicked (don't hide on other interactions like
+            // focusout so the input remains visible until an explicit
+            // submit via the button).
             try {
               LeaderboardManager.render(this.leaderboardListEl);
             } catch (_e) {
               /* ignore */
             }
             try {
-              if (initialsInput) initialsInput.classList.add("hidden");
-              if (submitBtn) submitBtn.classList.add("hidden");
-              const initialsLabel = document.getElementById("initialsLabel");
-              if (initialsLabel) initialsLabel.classList.add("hidden");
+              // Hide the UI and cleanup listeners when the user explicitly
+              // clicked the Submit button.
+              hideInitialsUI();
             } catch (_e) {
               /* ignore */
             }
@@ -1174,7 +1213,9 @@ class DarkHorizon {
             /* ignore */
           }
 
-          // Also allow Enter key on the input to submit
+          // Also allow Enter key on the input to submit. When Enter is
+          // pressed and submission succeeds, hide the initials UI like a
+          // click submission so the Play Again button can be focused.
           /** @param {KeyboardEvent} ev */
           const onKey = (ev) => {
             if (ev.key === "Enter") {
@@ -1202,11 +1243,11 @@ class DarkHorizon {
               } catch (_e) {
                 /* ignore */
               }
+              // Hide the initials UI on Enter (match click behavior) so
+              // the Play Again button can be focused and the UI is cleaned
+              // up after a successful submit.
               try {
-                if (initialsInput) initialsInput.classList.add("hidden");
-                if (submitBtn) submitBtn.classList.add("hidden");
-                const initialsLabel = document.getElementById("initialsLabel");
-                if (initialsLabel) initialsLabel.classList.add("hidden");
+                hideInitialsUI();
               } catch (_e) {
                 /* ignore */
               }
@@ -1222,7 +1263,7 @@ class DarkHorizon {
           // moved to the submit button (user clicked Submit). Use focusout
           // which bubbles and provides relatedTarget on modern browsers.
           /** @param {FocusEvent} ev */
-          const onFocusOut = (ev) => {
+          onFocusOut = (ev) => {
             try {
               const related = /** @type {HTMLElement|null} */ (
                 // relatedTarget may be null in some environments; fall back
@@ -1239,23 +1280,21 @@ class DarkHorizon {
                 (related &&
                   typeof related.closest === "function" &&
                   related.closest("#initialsInput"));
+              // If focus moved away from the input and didn't go to the
+              // submit button or back to the input itself, don't hide the
+              // UI automatically; instead remove focus handlers to avoid
+              // leaks and keep the controls visible until the user clicks
+              // Submit explicitly.
               if (!movedToSubmit && !movedToInitials) {
                 try {
-                  if (initialsInput) initialsInput.classList.add("hidden");
-                  if (submitBtn) submitBtn.classList.add("hidden");
-                  const initialsLabel = document.getElementById("initialsLabel");
-                  if (initialsLabel) initialsLabel.classList.add("hidden");
-                } catch (_e) {
-                  /* ignore */
-                }
-                try {
-                  // Remove input listeners to avoid leaks
+                  // Remove input listeners to avoid leaks but keep UI visible
                   cleanupInput();
                 } catch (_err) {
                   /* ignore */
                 }
                 try {
-                  initialsInput.removeEventListener("focusout", onFocusOut);
+                  const fn = /** @type {(ev: FocusEvent) => void} */ (onFocusOut);
+                  initialsInput.removeEventListener("focusout", fn);
                 } catch (_err) {
                   /* ignore */
                 }
@@ -1269,21 +1308,19 @@ class DarkHorizon {
           } catch (_e) {
             /* ignore */
           }
-          // When hiding the input after a successful submit, listeners are
-          // removed by replacing the element's class; if needed, remove the
-          // input listener here when the input is hidden to avoid leaks.
-          const cleanupInput = () => {
-            try {
-              if (onInput) initialsInput.removeEventListener("input", onInput);
-            } catch (_err) {
-              /* ignore */
-            }
-          };
-          // Ensure cleanup when submit is clicked and succeeds
+          // Ensure cleanup when submit is clicked and succeeds. The shared
+          // cleanupInput declared earlier is used; schedule a final cleanup
+          // after click handlers run.
           const _originalOnClick = submitBtn.onclick;
           submitBtn.addEventListener("click", () => {
             // small timeout to allow other handlers to run then cleanup
-            setTimeout(cleanupInput, 0);
+            setTimeout(() => {
+              try {
+                cleanupInput();
+              } catch (_err) {
+                /* ignore */
+              }
+            }, 0);
           });
         }
       }

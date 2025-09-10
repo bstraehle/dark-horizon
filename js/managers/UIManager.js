@@ -149,10 +149,13 @@ export class UIManager {
       document.getElementById("initialsInput")
     );
     const submitBtn = /** @type {HTMLElement|null} */ (document.getElementById("submitScoreBtn"));
+    // Consider initials input/submission present only when they are visible.
+    const visibleInitials =
+      initialsInput && !initialsInput.classList.contains("hidden") ? initialsInput : null;
     // Prefer the initials input so users can type immediately, but if the
-    // final score is zero prefer focusing the Play/Restart button so users
-    // can immediately play again without typing initials for a zero score.
-    let preferred = initialsInput || restartBtn;
+    // final score is zero or the initials UI is hidden prefer focusing
+    // the Play/Restart button so users can immediately play again.
+    let preferred = visibleInitials || restartBtn;
     if (typeof score === "number" && score === 0) {
       preferred = restartBtn;
     }
@@ -427,7 +430,7 @@ export class UIManager {
     if (gameOverScreen && !gameOverScreen.classList.contains("hidden")) {
       // When ensuring overlay focus, prefer the initials input when present.
       const inputEl = /** @type {HTMLElement|null} */ (document.getElementById("initialsInput"));
-      const preferredEl = inputEl || restartBtn;
+      const preferredEl = inputEl && !inputEl.classList.contains("hidden") ? inputEl : restartBtn;
       if (UIManager._preserveFocus) UIManager.focusPreserveScroll(preferredEl);
       else UIManager.focusWithRetry(preferredEl);
       return;
@@ -479,12 +482,16 @@ export class UIManager {
     if (overlayGameOverVisible) {
       const isRestart =
         t === restartBtn || (t && typeof t.closest === "function" && t.closest("#restartBtn"));
+      const initialsEl = /** @type {HTMLElement|null} */ (document.getElementById("initialsInput"));
+      const submitEl = /** @type {HTMLElement|null} */ (document.getElementById("submitScoreBtn"));
       const isInitials =
-        t === document.getElementById("initialsInput") ||
-        (t && typeof t.closest === "function" && t.closest("#initialsInput"));
+        initialsEl &&
+        !initialsEl.classList.contains("hidden") &&
+        (t === initialsEl || (t && typeof t.closest === "function" && t.closest("#initialsInput")));
       const isSubmit =
-        t === document.getElementById("submitScoreBtn") ||
-        (t && typeof t.closest === "function" && t.closest("#submitScoreBtn"));
+        submitEl &&
+        !submitEl.classList.contains("hidden") &&
+        (t === submitEl || (t && typeof t.closest === "function" && t.closest("#submitScoreBtn")));
 
       // If the user is interacting with the initials input or submit button,
       // don't yank focus back to the restart button.
@@ -542,12 +549,24 @@ export class UIManager {
     if (targetIsLeaderboard) return;
     const targetIsRestart =
       t === restartBtn || (t && typeof t.closest === "function" && t.closest("#restartBtn"));
+    const initialsEl = /** @type {HTMLElement|null} */ (document.getElementById("initialsInput"));
+    const submitEl = /** @type {HTMLElement|null} */ (document.getElementById("submitScoreBtn"));
+    const targetIsInitials =
+      initialsEl &&
+      !initialsEl.classList.contains("hidden") &&
+      (t === initialsEl || (t && typeof t.closest === "function" && t.closest("#initialsInput")));
+    const targetIsSubmit =
+      submitEl &&
+      !submitEl.classList.contains("hidden") &&
+      (t === submitEl || (t && typeof t.closest === "function" && t.closest("#submitScoreBtn")));
+
     // Do not prevent default or stop propagation here: allow touch/scroll
     // interactions (e.g. scrolling the leaderboard) to continue. Only
-    // ensure the restart button regains focus when appropriate.
-    if (!targetIsRestart) {
-      // let the event continue so users can scroll/tap the leaderboard
-    }
+    // ensure the restart button regains focus when appropriate. If the
+    // user is interacting with the initials input or submit button, or
+    // the restart button itself, do not yank focus.
+    if (targetIsRestart || targetIsInitials || targetIsSubmit) return;
+
     if (UIManager._preserveFocus) UIManager.focusPreserveScroll(restartBtn);
     else UIManager.focusWithRetry(restartBtn);
   }
