@@ -285,9 +285,6 @@ body {
   .score {
     padding: 6px 10px;
   }
-  .instructions {
-    font-size: clamp(0.9rem, 1vw + 0.7rem, 1.1rem);
-  }
 }
 
 /* Input-modality-based hints */
@@ -521,31 +518,5 @@ body.about-body,
   opacity: 0.95;
 }
 
-/* Tighter spacing for about page on small screens */
-@media (max-width: 480px) {
-  .about-page {
-    /* Tighter symmetric padding on narrow screens */
-    padding-top: var(--space-5);
-    padding-bottom: var(--space-5);
-    padding-left: var(--space-3);
-    padding-right: var(--space-3);
-  }
-  .about-content {
-    padding: 0 6px;
-  }
-  .about-header {
-    margin-bottom: var(--space-3);
-  }
-  /* Give the about page title more equal breathing room on narrow screens */
-  .about-content h1 {
-    margin-top: var(--space-6);
-    margin-bottom: var(--space-8);
-  }
-  .instructions {
-    font-size: 0.98rem;
-  }
-  /* Slightly reduce h3 size on small screens for better visual balance */
-  .about-content h3 {
-    font-size: 1.2rem;
-  }
-}
+/* Mobile-specific about-page overrides removed so the about page uses the
+  same styling as desktop on small screens. */
