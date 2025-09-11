@@ -76,8 +76,9 @@ export class BackgroundManager {
     } = ctxObj;
     Background.draw(ctx, width, height);
     // Do not darken the background here; keep nebula brightness unchanged while paused.
-    // Always draw nebula when available (even when paused or game over)
-    if (nebulaConfigs) {
+    // Only draw nebula during active gameplay. This prevents nebula from
+    // appearing on the start/menu screens or when the game is paused/game over.
+    if (nebulaConfigs && ctxObj.running) {
       Nebula.draw(ctx, nebulaConfigs);
     }
     const timeSec = typeof ctxObj.timeSec === "number" ? ctxObj.timeSec : (animTime || 0) / 1000;

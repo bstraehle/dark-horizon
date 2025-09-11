@@ -639,8 +639,18 @@ class DarkHorizon {
         const ctx = getGameContext(this);
         const resized = BackgroundManager.resize(ctx, prevView);
         if (resized) {
-          if (resized.nebulaConfigs) this.nebulaConfigs = resized.nebulaConfigs;
-          if (resized.starField) this.starField = resized.starField;
+          // When the view size has changed, regenerate the nebula so it
+          // matches the new dimensions instead of scaling the old one.
+          const widthChanged = (prevView.width || 0) !== (this.view.width || 0);
+          const heightChanged = (prevView.height || 0) !== (this.view.height || 0);
+          if (widthChanged || heightChanged) {
+            // Force nebula regeneration on resize
+            this.nebulaConfigs = undefined;
+            this.initBackground();
+          } else {
+            if (resized.nebulaConfigs) this.nebulaConfigs = resized.nebulaConfigs;
+            if (resized.starField) this.starField = resized.starField;
+          }
         } else {
           // Fallback to init if resize helper couldn't run (e.g., no prior state)
           this.initBackground();
@@ -828,11 +838,13 @@ class DarkHorizon {
       void 0;
     }
 
-    // Force-generate nebula for the start screen so background looks fresh even when not running
+    // Preserve existing nebula/starField state but do not force-generate
+    // nebula for the start/menu screen. Nebula will be generated when the
+    // game starts so it only appears during gameplay.
     try {
       const bg = BackgroundManager.init({
         view: this.view,
-        running: true,
+        running: false,
         isMobile: this._isMobile,
         rng: this.rng,
       });
@@ -889,9 +901,11 @@ class DarkHorizon {
     // at the spawn position when the game is not yet running.
     this.resizeCanvas();
     this.hideGameInfo();
-    this.initBackground();
-    // Now mark the state as running and start the loop.
+    // Now mark the state as running and then initialize background so
+    // nebula generation (which runs only when ctx.running === true) will
+    // occur. This ensures nebula appears only during gameplay.
     this.state.start();
+    this.initBackground();
     this.loop.start();
   }
 
@@ -1651,9 +1665,8 @@ class DarkHorizon {
       // Non-browser/test envs: fall back to fresh RNG
       ctx.rng = new RNG();
     }
-    if (!this.nebulaConfigs) {
-      ctx.running = true; // force nebula creation for initial/menu background
-    }
+    // Do not force nebula creation for the menu/start screen. Nebula will be
+    // created when the game is started (running == true).
     const { nebulaConfigs, starField } = BackgroundManager.init(ctx);
     // Preserve existing nebula when not re-generated (e.g., paused/gameover)
     if (nebulaConfigs) this.nebulaConfigs = nebulaConfigs;
