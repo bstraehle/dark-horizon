@@ -496,10 +496,10 @@ body.about-body,
 
 /* Remove horizontal padding for the Back link so it lines up with text */
 .about-content p.about-back .action-link {
-  padding-left: 0;
-  padding-right: 0;
-  /* Ensure the Back link aligns with surrounding content by removing
-    the global .action-link top margin specifically on the about page */
+  /* Match the same vertical/horizontal padding used by the site-wide .action-link
+     so the Back link visually matches the About link on the index page. */
+  padding: var(--space-2) var(--space-3);
+  /* Keep the top margin override so the link sits flush with surrounding text */
   margin-top: 0;
 }
 .about-header svg {
