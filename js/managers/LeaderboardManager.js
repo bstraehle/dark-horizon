@@ -342,7 +342,7 @@ export class LeaderboardManager {
       }
       entries.slice(0, 100).forEach((e, idx) => {
         const li = document.createElement("li");
-        const rank = `#${idx + 1}`;
+        const rank = `${idx + 1}`;
         let badge;
         if (/^[A-Z]{1,3}$/.test(e.id)) {
           badge = e.id;
@@ -352,7 +352,7 @@ export class LeaderboardManager {
         const medals = ["🥇", "🥈", "🥉"];
         const medalPrefix = idx >= 0 && idx < 3 ? medals[idx] + " " : "";
         const outsideTopThreePrefix = idx >= 3 ? "👍 " : "";
-        li.textContent = `${medalPrefix}${outsideTopThreePrefix}${rank} ${badge} — ${e.score}`;
+        li.textContent = `${medalPrefix}${outsideTopThreePrefix}${rank} — ${badge} — ${e.score}`;
         listEl.appendChild(li);
       });
     };

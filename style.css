@@ -361,8 +361,8 @@ body {
   font-size: 0.95rem;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch; /* smooth momentum scrolling on iOS */
-  justify-content: center;
-  text-align: center;
+  justify-content: flex-start;
+  text-align: left;
   margin-bottom: var(--space-2);
   padding: var(--space-2) var(--space-3);
 }
@@ -406,10 +406,10 @@ body {
   color: var(--color-text);
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   font-weight: 600;
   font-size: 0.95rem;
-  text-align: center;
+  text-align: left;
   margin-bottom: var(--space-2);
   /* Fixed height for pixel-perfect 3-row layout. Keep horizontal padding only. */
   height: 48px;
