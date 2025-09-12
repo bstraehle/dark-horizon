@@ -4,8 +4,10 @@
  */
 export class LeaderboardManager {
   static KEY = "darkHorizonLeaderboard:v1";
-  static IS_REMOTE = false;
-  static REMOTE_ENDPOINT = "https://example.com/api/leaderboard";
+  static IS_REMOTE = true;
+  static REMOTE_ENDPOINT =
+    "https://0p6x6bw6c2.execute-api.us-west-2.amazonaws.com/dev/leaderboard?id=1";
+  // Server-side leaderboard identifier used when posting scores
   static MAX_ENTRIES = 10;
 
   /**
@@ -31,14 +33,51 @@ export class LeaderboardManager {
     }
 
     // Remote: return a Promise resolving to the entries array.
+    // If fetch isn't available (older browsers or test env), fallback to local storage.
+    if (typeof fetch !== "function") {
+      try {
+        const raw = localStorage.getItem(LeaderboardManager.KEY);
+        if (!raw) return Promise.resolve([]);
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return Promise.resolve([]);
+        return Promise.resolve(
+          parsed.map((e) => ({ id: String(e.id || ""), score: Number(e.score || 0) }))
+        );
+      } catch (err) {
+        if (typeof console !== "undefined" && console && typeof console.warn === "function") {
+          console.warn(
+            "LeaderboardManager: fetch unavailable, loaded leaderboard from localStorage as fallback.",
+            err
+          );
+        }
+        return Promise.resolve([]);
+      }
+    }
+
+    if (typeof console !== "undefined" && console && typeof console.debug === "function") {
+      console.debug(
+        "LeaderboardManager: fetching remote leaderboard from",
+        LeaderboardManager.REMOTE_ENDPOINT
+      );
+    }
     return fetch(LeaderboardManager.REMOTE_ENDPOINT, { method: "GET" })
       .then((res) => {
         if (!res.ok) return [];
         return res.json();
       })
       .then((parsed) => {
-        if (!Array.isArray(parsed)) return [];
-        return parsed.map((e) => ({ id: String(e.id || ""), score: Number(e.score || 0) }));
+        // Server may return either an array of entries, or an object like
+        // { id: 1, scores: [ {score, id}, ... ], updatedAt: "..." }
+        let arr = null;
+        if (Array.isArray(parsed)) arr = parsed;
+        else if (parsed && Array.isArray(parsed.scores)) arr = parsed.scores;
+        if (!arr) return [];
+        return /** @type {{id:any,score:any}[]} */ (arr).map(
+          /** @param {{id:any,score:any}} e */ (e) => ({
+            id: String(e.id || ""),
+            score: Number(e.score || 0),
+          })
+        );
       })
       .catch(() => []);
   }
@@ -60,15 +99,182 @@ export class LeaderboardManager {
         return false;
       }
     }
-
     // Remote: return a Promise resolving to boolean success.
+    // If fetch isn't available (older browsers or test env), fallback to local storage.
+    if (typeof fetch !== "function") {
+      try {
+        // Best-effort: persist payload locally when remote not possible.
+        localStorage.setItem(LeaderboardManager.KEY, JSON.stringify(payload));
+        if (typeof console !== "undefined" && console && typeof console.warn === "function") {
+          console.warn(
+            "LeaderboardManager: fetch unavailable, saved leaderboard locally as fallback."
+          );
+        }
+        return Promise.resolve(true);
+      } catch (err) {
+        if (typeof console !== "undefined" && console && typeof console.error === "function") {
+          console.error("LeaderboardManager: failed to save locally as fallback", err);
+        }
+        return Promise.resolve(false);
+      }
+    }
+
+    // Send a structured payload the server expects: { scores: [...], id: <leaderboard id> }
+    const body = JSON.stringify({ scores: payload });
+    if (typeof console !== "undefined" && console && typeof console.debug === "function") {
+      console.debug(
+        "LeaderboardManager: posting leaderboard to",
+        LeaderboardManager.REMOTE_ENDPOINT,
+        body
+      );
+    }
     return fetch(LeaderboardManager.REMOTE_ENDPOINT, {
-      method: "POST",
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body,
     })
-      .then((res) => res.ok)
-      .catch(() => false);
+      .then((res) => {
+        if (!res.ok) {
+          // Attempt to persist locally as fallback
+          try {
+            localStorage.setItem(LeaderboardManager.KEY, JSON.stringify(payload));
+          } catch (_) {
+            /* ignore */
+          }
+          if (typeof console !== "undefined" && console && typeof console.warn === "function") {
+            // Include the request payload to help debug remote save failures
+            try {
+              console.warn(
+                "LeaderboardManager: remote save failed (status " + res.status + ") - payload:",
+                body,
+                "- saved locally as fallback."
+              );
+            } catch (_e) {
+              // Fallback to a simple string message if console.warn can't handle complex objects in some envs
+              console.warn(
+                "LeaderboardManager: remote save failed (status " +
+                  res.status +
+                  "), saved locally as fallback."
+              );
+            }
+          }
+          return false;
+        }
+
+        // If server responded ok, attempt to parse the response body which should use
+        // the same shape as `load` (either an array of entries or { scores: [...] }).
+        /** @param {{id:any,score:any}[]|null} arr */
+        const handleAndPersist = (arr) => {
+          if (!arr) {
+            // No usable payload returned: persist the payload we sent as a best-effort fallback.
+            try {
+              localStorage.setItem(LeaderboardManager.KEY, JSON.stringify(payload));
+            } catch (_) {
+              /* ignore */
+            }
+            return Promise.resolve(true);
+          }
+
+          // Normalize returned entries and persist to localStorage so the client is repopulated
+          try {
+            const normalized = /** @type {{id:any,score:any}[]} */ (arr)
+              .map(
+                /** @param {{id:any,score:any}} e */
+                (e) => ({ id: String(e.id || ""), score: Number(e.score || 0) })
+              )
+              .slice(0, LeaderboardManager.MAX_ENTRIES);
+            try {
+              localStorage.setItem(LeaderboardManager.KEY, JSON.stringify(normalized));
+            } catch (_) {
+              /* ignore */
+            }
+            // Dispatch a DOM event so any UI can update immediately without requiring a full reload.
+            try {
+              if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
+                // Prefer the window's CustomEvent (available in jsdom) and safely
+                // fall back if not present.
+                const CE =
+                  typeof window.CustomEvent === "function"
+                    ? window.CustomEvent
+                    : typeof CustomEvent === "function"
+                      ? CustomEvent
+                      : null;
+                if (CE) {
+                  window.dispatchEvent(new CE("leaderboard:updated", { detail: normalized }));
+                }
+              }
+            } catch (_) {
+              /* ignore */
+            }
+            return Promise.resolve(true);
+          } catch (_) {
+            return Promise.resolve(true);
+          }
+        };
+
+        return res
+          .json()
+          .then((parsed) => {
+            let arr = null;
+            if (Array.isArray(parsed)) arr = parsed;
+            else if (parsed && Array.isArray(parsed.scores)) arr = parsed.scores;
+            if (arr) return handleAndPersist(arr);
+
+            // If the PUT response didn't include usable data (204/no body), try a follow-up GET
+            return fetch(LeaderboardManager.REMOTE_ENDPOINT, { method: "GET" })
+              .then((r2) => {
+                if (!r2.ok) return null;
+                return r2.json();
+              })
+              .then((parsed2) => {
+                let arr2 = null;
+                if (Array.isArray(parsed2)) arr2 = parsed2;
+                else if (parsed2 && Array.isArray(parsed2.scores)) arr2 = parsed2.scores;
+                return handleAndPersist(arr2);
+              })
+              .catch(() => {
+                // If follow-up GET fails, persist the payload as fallback
+                return handleAndPersist(null);
+              });
+          })
+          .catch(() => {
+            // Couldn't parse JSON body: try a follow-up GET before falling back.
+            return fetch(LeaderboardManager.REMOTE_ENDPOINT, { method: "GET" })
+              .then((r2) => {
+                if (!r2.ok) return null;
+                return r2.json();
+              })
+              .then((parsed2) => {
+                let arr2 = null;
+                if (Array.isArray(parsed2)) arr2 = parsed2;
+                else if (parsed2 && Array.isArray(parsed2.scores)) arr2 = parsed2.scores;
+                return handleAndPersist(arr2);
+              })
+              .catch(() => handleAndPersist(null));
+          });
+      })
+      .catch((err) => {
+        // network or other error - fallback to local storage
+        try {
+          localStorage.setItem(LeaderboardManager.KEY, JSON.stringify(payload));
+        } catch (_) {
+          /* ignore */
+        }
+        if (typeof console !== "undefined" && console && typeof console.error === "function") {
+          // Include the request payload to help debug network errors during remote save
+          try {
+            console.error(
+              "LeaderboardManager: remote save failed - payload:",
+              body,
+              "- saved locally as fallback",
+              err
+            );
+          } catch (_e) {
+            console.error("LeaderboardManager: remote save failed, saved locally as fallback", err);
+          }
+        }
+        return false;
+      });
   }
 
   /**
@@ -123,7 +329,8 @@ export class LeaderboardManager {
    */
   static render(listEl) {
     if (!listEl) return;
-    const entries = LeaderboardManager.load();
+    // Always render local entries synchronously first for immediate feedback.
+    const localEntries = LeaderboardManager.load({ remote: false });
 
     const doRender = /** @param {{id:string,score:number}[]} entries */ (entries) => {
       while (listEl.firstChild) listEl.removeChild(listEl.firstChild);
@@ -150,18 +357,24 @@ export class LeaderboardManager {
       });
     };
 
-    if (Array.isArray(entries)) {
-      doRender(entries);
-      return;
+    // Render local entries immediately.
+    if (Array.isArray(localEntries)) {
+      doRender(localEntries);
     }
 
-    // Remote: entries is a Promise
-    entries.then(doRender).catch(() => {
-      while (listEl.firstChild) listEl.removeChild(listEl.firstChild);
-      const li = document.createElement("li");
-      li.textContent = "No scores yet";
-      listEl.appendChild(li);
-    });
+    // If remote loading is enabled, fetch and re-render when available.
+    if (LeaderboardManager.IS_REMOTE) {
+      const remoteEntriesPromise = LeaderboardManager.load({ remote: true });
+      if (
+        !Array.isArray(remoteEntriesPromise) &&
+        remoteEntriesPromise &&
+        typeof remoteEntriesPromise.then === "function"
+      ) {
+        remoteEntriesPromise.then(doRender).catch(() => {
+          // keep local rendering if remote fails
+        });
+      }
+    }
     return;
   }
 }

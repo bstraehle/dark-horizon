@@ -1045,7 +1045,7 @@ class DarkHorizon {
           // Allow 1 to 3 letters (previously required exactly 3)
           if (/^[A-Z]{1,3}$/.test(raw)) {
             try {
-              LeaderboardManager.submit(this.score, raw);
+              LeaderboardManager.submit(this.score, raw, { remote: LeaderboardManager.IS_REMOTE });
               submittedScore = true;
               // clear input to indicate success
               initialsInput.value = "";
@@ -1171,7 +1171,9 @@ class DarkHorizon {
                 : "";
               if (/^[A-Z]{1,3}$/.test(raw)) {
                 try {
-                  LeaderboardManager.submit(this.score, raw);
+                  LeaderboardManager.submit(this.score, raw, {
+                    remote: LeaderboardManager.IS_REMOTE,
+                  });
                   submittedScore = true;
                   if (initialsInput) initialsInput.value = "";
                 } catch (_e) {
@@ -1242,7 +1244,9 @@ class DarkHorizon {
                   : "";
                 if (/^[A-Z]{1,3}$/.test(raw)) {
                   try {
-                    LeaderboardManager.submit(this.score, raw);
+                    LeaderboardManager.submit(this.score, raw, {
+                      remote: LeaderboardManager.IS_REMOTE,
+                    });
                     submittedScore = true;
                     if (initialsInput) initialsInput.value = "";
                   } catch (_e) {

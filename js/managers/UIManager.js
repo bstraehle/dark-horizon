@@ -1,6 +1,7 @@
 /**
  * UIManager centralizes DOM updates and focus management for overlays and scores.
  */
+import LeaderboardManager from "./LeaderboardManager.js";
 export class UIManager {
   // When true prefer scroll-preserving focus calls while overlays are visible.
   static _preserveFocus = false;
@@ -598,4 +599,22 @@ export class UIManager {
     if (UIManager._preserveFocus) UIManager.focusPreserveScroll(restartBtn);
     else UIManager.focusWithRetry(restartBtn);
   }
+}
+
+// Listen for leaderboard updates (dispatched by LeaderboardManager.save) and
+// re-render the visible leaderboard list if present. Guarded so it only runs
+// when a browser-like window/document exists.
+try {
+  if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
+    window.addEventListener("leaderboard:updated", () => {
+      try {
+        const list = /** @type {HTMLElement|null} */ (document.getElementById("leaderboardList"));
+        if (list) LeaderboardManager.render(list);
+      } catch (_) {
+        /* ignore */
+      }
+    });
+  }
+} catch (_) {
+  /* ignore */
 }
