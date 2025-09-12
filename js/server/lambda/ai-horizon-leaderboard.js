@@ -1,16 +1,15 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import {
-  DynamoDBDocumentClient,
-  GetCommand,
-  UpdateCommand,
-  ScanCommand,
-} from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 
 const client = new DynamoDBClient({ region: "us-west-2" });
 const docClient = DynamoDBDocumentClient.from(client);
 
 const TABLE_NAME = "ai-horizon-leaderboard";
 
+/**
+ * Lambda handler
+ * @param {{httpMethod:string,queryStringParameters?:Record<string,string>,body?:string}} event
+ */
 export const handler = async (event) => {
   try {
     const { httpMethod, queryStringParameters, body } = event;
@@ -20,13 +19,21 @@ export const handler = async (event) => {
     switch (httpMethod) {
       case "GET":
         if (queryStringParameters && queryStringParameters.id) {
-          response = await getItem(+queryStringParameters.id);
+          response = await getItem(Number(queryStringParameters.id));
+        } else {
+          return { statusCode: 400, body: JSON.stringify({ message: "Missing id" }) };
         }
         break;
 
       case "PUT":
+        if (!queryStringParameters || !queryStringParameters.id) {
+          return { statusCode: 400, body: JSON.stringify({ message: "Missing id" }) };
+        }
+        if (!body) {
+          return { statusCode: 400, body: JSON.stringify({ message: "Missing body" }) };
+        }
         updateData = JSON.parse(body);
-        response = await updateItem(+queryStringParameters.id, updateData);
+        response = await updateItem(Number(queryStringParameters.id), updateData);
         break;
 
       default:
@@ -48,16 +55,20 @@ export const handler = async (event) => {
     };
   } catch (error) {
     console.error("Error:", error);
+    const message = error instanceof Error ? error.message : String(error);
     return {
       statusCode: 500,
       body: JSON.stringify({
         message: "Internal server error",
-        error: error.message,
+        error: message,
       }),
     };
   }
 };
 
+/**
+ * @param {number} id
+ */
 async function getItem(id) {
   const params = {
     TableName: TABLE_NAME,

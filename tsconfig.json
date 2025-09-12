@@ -13,6 +13,6 @@
     "exactOptionalPropertyTypes": false,
     "lib": ["ES2020", "DOM", "DOM.Iterable"]
   },
-  "include": ["js/**/*.js"],
+  "include": ["js/**/*.js", "types/**/*.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
