@@ -21,24 +21,13 @@ export const handler = async (event) => {
       case "GET":
         if (queryStringParameters && queryStringParameters.id) {
           response = await getItem(+queryStringParameters.id);
-        } else {
-          response = await getAllItems();
         }
         break;
-
-      /*case 'POST':
-                const newItem = JSON.parse(body);
-                response = await createItem(newItem);
-                break;*/
 
       case "PUT":
         updateData = JSON.parse(body);
         response = await updateItem(+queryStringParameters.id, updateData);
         break;
-
-      /*case 'DELETE':
-                response = await deleteItem(+queryStringParameters.id);
-                break;*/
 
       default:
         return {
@@ -86,24 +75,6 @@ async function getItem(id) {
 
   return result.Item;
 }
-
-async function getAllItems() {
-  const params = {
-    TableName: TABLE_NAME,
-  };
-
-  const command = new ScanCommand(params);
-  const result = await docClient.send(command);
-
-  return {
-    items: result.Items,
-    count: result.Count,
-  };
-}
-
-/* createItem, deleteItem and queryItems helpers removed to avoid unused-import
-   warnings for PutCommand/DeleteCommand/QueryCommand which were only used in
-   commented examples. Re-add them if you need create/delete/query behavior. */
 
 /**
  * Update an item in the leaderboard table.
@@ -154,5 +125,3 @@ async function updateItem(id, updateData) {
     item: result.Attributes,
   };
 }
-
-/* see above note about removed helper examples */
