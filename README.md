@@ -71,7 +71,7 @@ Or use the npm scripts (requires Node.js):
 - Canvas-based rendering with gradients and shadows
 - ES modules split logic across `game.js`, `entities/*`, and `managers/*`
 - Mobile tweaks: touch controls and reduced asteroid speed
-- High score key: `darkHorizonHighScore` in `localStorage`
+- High score is derived from the persisted leaderboard entries (stored under `aiHorizonLeaderboard` in localStorage)
 
 ## Types overview
 

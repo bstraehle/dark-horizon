@@ -1,14 +1,63 @@
 /**
- * LeaderboardManager: simple client-side top-N leaderboard using localStorage.
+ * LeaderboardManager: simple client-side top-N leaderboard using localStorage or a remote server.
  * Stores entries as [{id, score}] sorted by score desc. No PII collected.
  */
 export class LeaderboardManager {
-  static KEY = "darkHorizonLeaderboard:v1";
   static IS_REMOTE = true;
   static REMOTE_ENDPOINT =
     "https://0p6x6bw6c2.execute-api.us-west-2.amazonaws.com/dev/leaderboard?id=1";
   // Server-side leaderboard identifier used when posting scores
   static MAX_ENTRIES = 10;
+  static KEY_LEADERBOARD = "aiHorizonLeaderboard";
+  /** @type {{id:string,score:number}[]|null} */
+  static _cacheEntries = null;
+  /** @type {Promise<{id:string,score:number}[]>|null} */
+  static _pendingLoadPromise = null;
+  // Guard to only log/trace the first load invocation to avoid duplicate console spam
+  static _hasLoggedLoad = false;
+
+  /**
+   * Load the high score derived from the persisted leaderboard.
+   * By default reads the local leaderboard (remote=false).
+   * @param {{remote?:boolean}=} options
+   * @returns {number|Promise<number>}
+   */
+  static loadHighScore({ remote = false } = {}) {
+    try {
+      const maybe = LeaderboardManager.load({ remote });
+      if (Array.isArray(maybe)) {
+        return maybe.reduce((max, e) => Math.max(max, Number(e.score || 0)), 0);
+      }
+      // remote path: returns a Promise
+      return /** @type {Promise<{id:string,score:number}[]>} */ (maybe).then((entries) =>
+        (entries || []).reduce((max, e) => Math.max(max, Number(e.score || 0)), 0)
+      );
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  /**
+   * Update the high score display and return the current high.
+   * High score is derived from leaderboard entries (no separate persistence).
+   * @param {number} score
+   * @param {number} [prevHigh]
+   * @param {HTMLElement|null} [highScoreEl]
+   * @returns {number}
+   */
+  static setHighScore(score, prevHigh, highScoreEl) {
+    let high = prevHigh || 0;
+    if (score > high) {
+      high = score;
+      // no localStorage write here: high is derived from leaderboard entries
+    }
+    try {
+      if (highScoreEl) highScoreEl.textContent = String(high);
+    } catch (_) {
+      /* ignore */
+    }
+    return high;
+  }
 
   /**
    * Load leaderboard entries (safe).
@@ -17,32 +66,54 @@ export class LeaderboardManager {
    * @returns {{id:string,score:number}[]|Promise<{id:string,score:number}[]>}
    */
   static load({ remote = this.IS_REMOTE } = {}) {
+    if (!LeaderboardManager._hasLoggedLoad) {
+      if (typeof console !== "undefined" && console && typeof console.log === "function") {
+        console.log("LeaderboardManager: load", { remote });
+      }
+      try {
+        if (typeof console !== "undefined" && console && typeof console.trace === "function") {
+          console.trace("LeaderboardManager.load called");
+        }
+      } catch (_e) {
+        /* ignore */
+      }
+      LeaderboardManager._hasLoggedLoad = true;
+    }
+
+    // Local-only path: return cached entries when available, else read localStorage
     if (!remote) {
       try {
-        const raw = localStorage.getItem(LeaderboardManager.KEY);
-        if (!raw) return [];
+        if (Array.isArray(LeaderboardManager._cacheEntries))
+          return LeaderboardManager._cacheEntries.slice();
+        const raw = localStorage.getItem(LeaderboardManager.KEY_LEADERBOARD);
+        if (!raw) {
+          LeaderboardManager._cacheEntries = [];
+          return [];
+        }
         const parsed = JSON.parse(raw);
-        if (!Array.isArray(parsed)) return [];
-        return parsed.map((e) => ({
-          id: String(e.id || ""),
-          score: Number(e.score || 0),
-        }));
+        if (!Array.isArray(parsed)) {
+          LeaderboardManager._cacheEntries = [];
+          return [];
+        }
+        const normalized = parsed.map(
+          /** @param {{id:any,score:any}} e */
+          (e) => ({ id: String(e.id || ""), score: Number(e.score || 0) })
+        );
+        LeaderboardManager._cacheEntries = normalized;
+        return normalized.slice();
       } catch (_) {
+        LeaderboardManager._cacheEntries = [];
         return [];
       }
     }
 
-    // Remote: return a Promise resolving to the entries array.
-    // If fetch isn't available (older browsers or test env), fallback to local storage.
+    // Remote path: memoize pending fetch to avoid duplicate network requests
+    if (LeaderboardManager._pendingLoadPromise) return LeaderboardManager._pendingLoadPromise;
+
     if (typeof fetch !== "function") {
       try {
-        const raw = localStorage.getItem(LeaderboardManager.KEY);
-        if (!raw) return Promise.resolve([]);
-        const parsed = JSON.parse(raw);
-        if (!Array.isArray(parsed)) return Promise.resolve([]);
-        return Promise.resolve(
-          parsed.map((e) => ({ id: String(e.id || ""), score: Number(e.score || 0) }))
-        );
+        const local = LeaderboardManager.load({ remote: false });
+        return Promise.resolve(Array.isArray(local) ? local : []);
       } catch (err) {
         if (typeof console !== "undefined" && console && typeof console.warn === "function") {
           console.warn(
@@ -54,32 +125,39 @@ export class LeaderboardManager {
       }
     }
 
-    if (typeof console !== "undefined" && console && typeof console.debug === "function") {
-      console.debug(
-        "LeaderboardManager: fetching remote leaderboard from",
-        LeaderboardManager.REMOTE_ENDPOINT
-      );
-    }
-    return fetch(LeaderboardManager.REMOTE_ENDPOINT, { method: "GET" })
+    LeaderboardManager._pendingLoadPromise = fetch(LeaderboardManager.REMOTE_ENDPOINT, {
+      method: "GET",
+    })
       .then((res) => {
         if (!res.ok) return [];
         return res.json();
       })
       .then((parsed) => {
-        // Server may return either an array of entries, or an object like
-        // { id: 1, scores: [ {score, id}, ... ], updatedAt: "..." }
         let arr = null;
         if (Array.isArray(parsed)) arr = parsed;
         else if (parsed && Array.isArray(parsed.scores)) arr = parsed.scores;
-        if (!arr) return [];
-        return /** @type {{id:any,score:any}[]} */ (arr).map(
-          /** @param {{id:any,score:any}} e */ (e) => ({
-            id: String(e.id || ""),
-            score: Number(e.score || 0),
-          })
+        if (!arr) {
+          LeaderboardManager._cacheEntries = [];
+          return [];
+        }
+        const normalized = arr.map(
+          /** @param {{id:any,score:any}} e */
+          (e) => ({ id: String(e.id || ""), score: Number(e.score || 0) })
         );
+        try {
+          localStorage.setItem(LeaderboardManager.KEY_LEADERBOARD, JSON.stringify(normalized));
+        } catch (_e) {
+          /* ignore */
+        }
+        LeaderboardManager._cacheEntries = normalized;
+        return normalized.slice();
       })
-      .catch(() => []);
+      .catch(() => [])
+      .finally(() => {
+        LeaderboardManager._pendingLoadPromise = null;
+      });
+
+    return LeaderboardManager._pendingLoadPromise;
   }
 
   /**
@@ -90,10 +168,23 @@ export class LeaderboardManager {
    * @returns {boolean|Promise<boolean>}
    */
   static save(entries, { remote = this.IS_REMOTE } = {}) {
+    // Use debug-level logging where available and avoid logging the whole
+    // entries array to reduce console noise. Include entry count for context.
+    try {
+      if (typeof console !== "undefined" && console && typeof console.debug === "function") {
+        console.debug("LeaderboardManager: save", {
+          remote,
+          count: Array.isArray(entries) ? entries.length : undefined,
+        });
+      }
+    } catch (_) {
+      /* ignore logging failures */
+    }
     const payload = entries.slice(0, LeaderboardManager.MAX_ENTRIES);
     if (!remote) {
       try {
-        localStorage.setItem(LeaderboardManager.KEY, JSON.stringify(payload));
+        localStorage.setItem(LeaderboardManager.KEY_LEADERBOARD, JSON.stringify(payload));
+        LeaderboardManager._cacheEntries = payload.slice();
         return true;
       } catch (_) {
         return false;
@@ -104,7 +195,7 @@ export class LeaderboardManager {
     if (typeof fetch !== "function") {
       try {
         // Best-effort: persist payload locally when remote not possible.
-        localStorage.setItem(LeaderboardManager.KEY, JSON.stringify(payload));
+        localStorage.setItem(LeaderboardManager.KEY_LEADERBOARD, JSON.stringify(payload));
         if (typeof console !== "undefined" && console && typeof console.warn === "function") {
           console.warn(
             "LeaderboardManager: fetch unavailable, saved leaderboard locally as fallback."
@@ -137,7 +228,7 @@ export class LeaderboardManager {
         if (!res.ok) {
           // Attempt to persist locally as fallback
           try {
-            localStorage.setItem(LeaderboardManager.KEY, JSON.stringify(payload));
+            localStorage.setItem(LeaderboardManager.KEY_LEADERBOARD, JSON.stringify(payload));
           } catch (_) {
             /* ignore */
           }
@@ -168,7 +259,7 @@ export class LeaderboardManager {
           if (!arr) {
             // No usable payload returned: persist the payload we sent as a best-effort fallback.
             try {
-              localStorage.setItem(LeaderboardManager.KEY, JSON.stringify(payload));
+              localStorage.setItem(LeaderboardManager.KEY_LEADERBOARD, JSON.stringify(payload));
             } catch (_) {
               /* ignore */
             }
@@ -184,15 +275,14 @@ export class LeaderboardManager {
               )
               .slice(0, LeaderboardManager.MAX_ENTRIES);
             try {
-              localStorage.setItem(LeaderboardManager.KEY, JSON.stringify(normalized));
+              localStorage.setItem(LeaderboardManager.KEY_LEADERBOARD, JSON.stringify(normalized));
             } catch (_) {
               /* ignore */
             }
+            LeaderboardManager._cacheEntries = normalized.slice();
             // Dispatch a DOM event so any UI can update immediately without requiring a full reload.
             try {
               if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
-                // Prefer the window's CustomEvent (available in jsdom) and safely
-                // fall back if not present.
                 const CE =
                   typeof window.CustomEvent === "function"
                     ? window.CustomEvent
@@ -256,7 +346,7 @@ export class LeaderboardManager {
       .catch((err) => {
         // network or other error - fallback to local storage
         try {
-          localStorage.setItem(LeaderboardManager.KEY, JSON.stringify(payload));
+          localStorage.setItem(LeaderboardManager.KEY_LEADERBOARD, JSON.stringify(payload));
         } catch (_) {
           /* ignore */
         }
@@ -277,11 +367,6 @@ export class LeaderboardManager {
       });
   }
 
-  /**
-   * Submit a score and persist top-N.
-   * @param {number} score
-   * @param {string} userId
-   */
   /**
    * Submit a score and persist top-N.
    * For remote=true returns a Promise resolving to boolean.
@@ -327,42 +412,59 @@ export class LeaderboardManager {
    * Render leaderboard into an ordered list element.
    * @param {HTMLElement|null} listEl
    */
-  static render(listEl) {
+  /**
+   * Render leaderboard into an ordered list element.
+   * If `entries` is provided, use it directly instead of calling `load()`
+   * which avoids double-loading when the caller already fetched the data.
+   * @param {HTMLElement|null} listEl
+   * @param {{id:string,score:number}[]=} entries
+   */
+  static render(listEl, entries) {
     if (!listEl) return;
-    // Always render local entries synchronously first for immediate feedback.
-    const localEntries = LeaderboardManager.load({ remote: false });
 
-    const doRender = /** @param {{id:string,score:number}[]} entries */ (entries) => {
+    /**
+     * @param {{id:string,score:number}[]} entriesToRender
+     */
+    const doRender = (entriesToRender) => {
       while (listEl.firstChild) listEl.removeChild(listEl.firstChild);
-      if (!entries || entries.length === 0) {
+      if (!entriesToRender || entriesToRender.length === 0) {
         const li = document.createElement("li");
         li.textContent = "No scores yet";
         listEl.appendChild(li);
         return;
       }
-      entries.slice(0, 100).forEach((e, idx) => {
-        const li = document.createElement("li");
-        const rank = `${idx + 1}`;
-        let badge;
-        if (/^[A-Z]{1,3}$/.test(e.id)) {
-          badge = e.id;
-        } else {
-          badge = "???";
+      entriesToRender.slice(0, 100).forEach(
+        /** @param {{id:string,score:number}} e */
+        (e, idx) => {
+          const li = document.createElement("li");
+          const rank = `${idx + 1}`;
+          let badge;
+          if (/^[A-Z]{1,3}$/.test(e.id)) {
+            badge = e.id;
+          } else {
+            badge = "???";
+          }
+          const medals = ["🥇", "🥈", "🥉"];
+          const medalPrefix = idx >= 0 && idx < 3 ? medals[idx] + " " : "";
+          const outsideTopThreePrefix = idx >= 3 ? "👍 " : "";
+          li.textContent = `${medalPrefix}${outsideTopThreePrefix}${rank} — ${badge} — ${e.score}`;
+          listEl.appendChild(li);
         }
-        const medals = ["🥇", "🥈", "🥉"];
-        const medalPrefix = idx >= 0 && idx < 3 ? medals[idx] + " " : "";
-        const outsideTopThreePrefix = idx >= 3 ? "👍 " : "";
-        li.textContent = `${medalPrefix}${outsideTopThreePrefix}${rank} — ${badge} — ${e.score}`;
-        listEl.appendChild(li);
-      });
+      );
     };
 
-    // Render local entries immediately.
+    // If entries were provided by the caller, render them and return.
+    if (Array.isArray(entries)) {
+      doRender(entries);
+      return;
+    }
+
+    // Otherwise behave as before: render local entries then optionally
+    // fetch remote entries and re-render.
+    const localEntries = LeaderboardManager.load({ remote: false });
     if (Array.isArray(localEntries)) {
       doRender(localEntries);
     }
-
-    // If remote loading is enabled, fetch and re-render when available.
     if (LeaderboardManager.IS_REMOTE) {
       const remoteEntriesPromise = LeaderboardManager.load({ remote: true });
       if (
@@ -370,9 +472,7 @@ export class LeaderboardManager {
         remoteEntriesPromise &&
         typeof remoteEntriesPromise.then === "function"
       ) {
-        remoteEntriesPromise.then(doRender).catch(() => {
-          // keep local rendering if remote fails
-        });
+        remoteEntriesPromise.then(doRender).catch(() => {});
       }
     }
     return;

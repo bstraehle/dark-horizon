@@ -37,7 +37,7 @@ describe("LeaderboardManager remote save", () => {
     const res = await LeaderboardManager.save(entries, { remote: true });
     expect(res).toBeTruthy();
 
-    const raw = localStorage.getItem(LeaderboardManager.KEY);
+    const raw = localStorage.getItem(LeaderboardManager.KEY_LEADERBOARD);
     expect(raw).not.toBeNull();
     const parsed = JSON.parse(raw);
     expect(Array.isArray(parsed)).toBe(true);

@@ -14,14 +14,6 @@ export class UIManager {
   static isElement(obj) {
     return typeof Element !== "undefined" && obj instanceof Element;
   }
-  /** Load high score from localStorage safely. */
-  static loadHighScore() {
-    try {
-      return Number(localStorage.getItem("darkHorizonHighScore")) || 0;
-    } catch (_) {
-      return 0;
-    }
-  }
 
   /** Set the current score element.
    * @param {HTMLElement|null} currentScoreEl
@@ -51,19 +43,7 @@ export class UIManager {
    * @param {HTMLElement|null} [highScoreEl]
    * @returns {number}
    */
-  static setHighScore(score, prevHigh, highScoreEl) {
-    let high = prevHigh || 0;
-    if (score > high) {
-      high = score;
-      try {
-        localStorage.setItem("darkHorizonHighScore", String(high));
-      } catch (_) {
-        // ignore
-      }
-    }
-    if (highScoreEl) highScoreEl.textContent = String(high);
-    return high;
-  }
+  // High score persistence delegated to LeaderboardManager
 
   /** Show pause overlay.
    * @param {HTMLElement|null} pauseScreen
@@ -86,7 +66,22 @@ export class UIManager {
    * @param {number} score
    * @param {boolean} [preserveScroll=false]  If true, attempt to focus without causing page scroll.
    */
-  static showGameOver(gameOverScreen, restartBtn, finalScoreEl, score, preserveScroll = false) {
+  /**
+   * @param {HTMLElement|null} gameOverScreen
+   * @param {HTMLElement|null} restartBtn
+   * @param {HTMLElement|null} finalScoreEl
+   * @param {number} score
+   * @param {boolean} [preserveScroll=false]
+   * @param {boolean|undefined} [allowInitials]
+   */
+  static showGameOver(
+    gameOverScreen,
+    restartBtn,
+    finalScoreEl,
+    score,
+    preserveScroll = false,
+    allowInitials = undefined
+  ) {
     if (finalScoreEl) finalScoreEl.textContent = String(score);
     if (gameOverScreen) gameOverScreen.classList.remove("hidden");
     // Always ensure the leaderboard (if present) is scrolled to the top when
@@ -115,7 +110,9 @@ export class UIManager {
     // Ensure the initials entry and submit controls are visible when the
     // final score is greater than zero. Game code attempts this as well,
     // but make a robust fallback here so the input shows even if other
-    // paths fail to toggle the classes.
+    // paths fail to toggle the classes. If `allowInitials` is explicitly
+    // provided (boolean), use it to override the default score>0 check so
+    // the caller can prevent the initials UI from being shown.
     try {
       const initialsEntry = /** @type {HTMLElement|null} */ (
         document.querySelector(".initials-entry")
@@ -127,7 +124,9 @@ export class UIManager {
       const initialsLabel = /** @type {HTMLElement|null} */ (
         document.getElementById("initialsLabel")
       );
-      if (typeof score === "number" && score > 0) {
+      const shouldShow =
+        typeof allowInitials === "boolean" ? allowInitials : typeof score === "number" && score > 0;
+      if (shouldShow) {
         if (initialsEntry) initialsEntry.classList.remove("hidden");
         if (initialsInput) initialsInput.classList.remove("hidden");
         if (submitBtn) submitBtn.classList.remove("hidden");
