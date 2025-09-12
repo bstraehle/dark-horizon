@@ -95,7 +95,6 @@ async function getItem(id) {
  */
 async function updateItem(id, updateData) {
   /** @type {{[key:string]: any}} */
-  // ensure we don't send id in the update payload
   delete updateData.id;
 
   updateData.updatedAt = new Date().toISOString();
