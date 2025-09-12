@@ -1,0 +1,16 @@
+{
+  "httpMethod": "PUT",
+  "queryStringParameters": {
+    "id": "1"
+  },
+  "pathParameters": null,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"scores\":\"[{\\\"id\\\":\\\"BJS\\\",\\\"score\\\":1650},{\\\"id\\\":\\\"BJS\\\",\\\"score\\\":870},{\\\"id\\\":\\\"BJS\\\",\\\"score\\\":640}]\",\"id\":1}",
+  "isBase64Encoded": false,
+  "requestContext": {
+    "requestId": "test-request-2",
+    "stage": "test"
+  }
+}

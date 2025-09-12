@@ -1,0 +1,16 @@
+{
+  "httpMethod": "GET",
+  "queryStringParameters": {
+    "id": "1"
+  },
+  "pathParameters": null,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": null,
+  "isBase64Encoded": false,
+  "requestContext": {
+    "requestId": "test-request-1",
+    "stage": "test"
+  }
+}
