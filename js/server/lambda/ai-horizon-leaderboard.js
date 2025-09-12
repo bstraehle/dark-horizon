@@ -101,32 +101,28 @@ async function getAllItems() {
   };
 }
 
-/*async function createItem(item) {
-    item.createdAt = new Date().toISOString();
-    item.updatedAt = new Date().toISOString();
-    
-    const params = {
-        TableName: TABLE_NAME,
-        Item: item,
-        ConditionExpression: 'attribute_not_exists(id)'
-    };
+/* createItem, deleteItem and queryItems helpers removed to avoid unused-import
+   warnings for PutCommand/DeleteCommand/QueryCommand which were only used in
+   commented examples. Re-add them if you need create/delete/query behavior. */
 
-    const command = new PutCommand(params);
-    await docClient.send(command);
-    
-    return {
-        message: 'Item created successfully',
-        item: item
-    };
-}*/
-
+/**
+ * Update an item in the leaderboard table.
+ * @param {number} id
+ * @param {{[key:string]: any}} updateData
+ * @returns {Promise<{message:string,item:any}>}
+ */
 async function updateItem(id, updateData) {
+  /** @type {{[key:string]: any}} */
+  // ensure we don't send id in the update payload
   delete updateData.id;
 
   updateData.updatedAt = new Date().toISOString();
 
+  /** @type {string[]} */
   const updateExpressions = [];
+  /** @type {{[key:string]: string}} */
   const expressionAttributeNames = {};
+  /** @type {{[key:string]: any}} */
   const expressionAttributeValues = {};
 
   Object.keys(updateData).forEach((key, index) => {
@@ -159,44 +155,4 @@ async function updateItem(id, updateData) {
   };
 }
 
-/*async function deleteItem(id) {
-    const params = {
-        TableName: TABLE_NAME,
-        Key: {
-            id: id
-        },
-        ConditionExpression: 'attribute_exists(id)',
-        ReturnValues: 'ALL_OLD'
-    };
-
-    const command = new DeleteCommand(params);
-    const result = await docClient.send(command);
-    
-    return {
-        message: 'Item deleted successfully',
-        deletedItem: result.Attributes
-    };
-}*/
-
-/*async function queryItems(partitionKey, sortKeyCondition = null) {
-    const params = {
-        TableName: TABLE_NAME,
-        KeyConditionExpression: 'id = :pk',
-        ExpressionAttributeValues: {
-            ':pk': partitionKey
-        }
-    };
-    
-    if (sortKeyCondition) {
-        params.KeyConditionExpression += ' AND ' + sortKeyCondition.expression;
-        Object.assign(params.ExpressionAttributeValues, sortKeyCondition.values);
-    }
-
-    const command = new QueryCommand(params);
-    const result = await docClient.send(command);
-    
-    return {
-        items: result.Items,
-        count: result.Count
-    };
-}*/
+/* see above note about removed helper examples */
