@@ -1,4 +1,4 @@
-# AI HORIZON
+## AI HORIZON — updated
 
 Fast, responsive space shooter built with HTML5 Canvas and vanilla JavaScript (ES modules). Collect stars, destroy asteroids, and chase a new high score — some asteroids are indestructible.
 
@@ -6,92 +6,105 @@ See `about.html` for controls, scoring, and gameplay tips.
 
 ## Quick start
 
-Because `index.html` loads ES modules (`type="module"`), the game must run from a web server (file:// won’t work).
+This project uses native ES modules, so the game must be served from an HTTP server (file:// won’t work).
 
-- Option A — VS Code Live Server: install “Live Server”, then click “Go Live”.
-- Option B — Windows PowerShell (Python 3):
-  - Preferred: `py -m http.server 8000`
-  - Fallback: `python -m http.server 8000`
-  - Then open http://localhost:8000
-- Option C — Node.js (if installed): `npx serve -l 8000 .`
+Recommended local flows:
 
-- Build for production: `npm install` → `npm run build`; then serve `dist/` to preview (e.g., `py -m http.server 8000` and open http://localhost:8000/dist/)
+- Using Node.js (recommended for development):
+  - Install dependencies: `npm install`
+  - Start a dev server (esbuild + serve): `npm run serve` (serves from project root on port 8000)
+  - Rebuild on file changes: `npm run watch`
+- Simple static preview (no Node.js required):
+  - From PowerShell: `py -m http.server 8000` then open http://localhost:8000
+  - Or use any static file server (e.g. `npx serve`)
 
-Or use the npm scripts (requires Node.js):
+Build for production:
 
-- Install deps: `npm install`
-- Dev server: `npm run serve` then open http://localhost:8000 (served from the project root)
-- Rebuild on save (no server): `npm run watch`
+- Run: `npm run build` — bundles `js/game.js` with esbuild into `dist/bundle.js` and runs a `postbuild` step that prepares `dist/index.html` and copies static assets.
+- Preview the `dist/` output by serving the folder (e.g. `py -m http.server 8000` and open http://localhost:8000/dist/).
 
-## Development and build
+## Scripts and tooling
 
-- Production build: `npm run build`
-  - Output goes to `dist/` with `bundle.js`, `style.css`, `favicon.png`, and a production `index.html` (derived from `index.prod.html`).
-  - To preview the production build, serve the folder and open dist:
-    - PowerShell (project root as server): `py -m http.server 8000` then open http://localhost:8000/dist/
-    - Or serve the folder directly: `npx serve -l 8000 dist`
+Key npm scripts (see `package.json`):
 
-### Troubleshooting
+- `npm run build` — bundle and minify with esbuild
+- `npm run postbuild` — copies assets and prepares `dist/index.html`
+- `npm run watch` — esbuild in watch mode (writes to `dist/`)
+- `npm run serve` — esbuild bundle with a built-in dev server on port 8000
+- `npm run lint` / `npm run lint:fix` — eslint checks and autofix
+- `npm run format` — formats files with Prettier
+- `npm run typecheck` — runs TypeScript type checks (project uses JSDoc + checkJs)
+- `npm test` — runs unit tests with Vitest
+
+Dev dependencies include: esbuild, eslint, prettier, vitest, jsdom, husky, and TypeScript.
+
+## Troubleshooting
 
 - Blank page or “Failed to load module script/CORS” → you opened via file://. Start a server (see above).
 - `python` not recognized on Windows → use `py -m http.server 8000`.
 - Port already in use → try another port, e.g. `py -m http.server 5500`.
 - High score not saving → Private/Incognito may block `localStorage`.
-- Strict CSP: `index.html`/`index.prod.html` use a strict Content-Security-Policy; inline scripts or external domains aren’t allowed.
 
 ## Features
 
 - Desktop and mobile friendly (keyboard, mouse, and touch)
 - Smooth animations with requestAnimationFrame
 - Starfield, nebulae, engine glow, explosions, and particle FX
-- High score persisted with `localStorage`
+- High score persisted with `localStorage` (leaderboard entries stored under `aiHorizonLeaderboard`)
 - Accessibility touches: focus guards for overlays, ARIA labels, and restored focus on tab return
 - Indestructible asteroids appear periodically to increase challenge
 
-## Project structure
+## Project structure (high-level)
 
 - `index.html` — App shell and canvas
+- `index.prod.html` — Production HTML used to create `dist/index.html` in `postbuild`
 - `style.css` — Layout and responsive styles
-- `js/constants.js` — Tunable settings (colors, sizes, speeds, spawn rates)
-- `js/game.js` — Game loop, state, and high-level orchestration
-- `js/entities/` — Entities (Player, Asteroid, Bullet, Star, EngineTrail, Explosion, Particle, Background, Nebula, StarField)
-- `js/managers/` — Focused modules that keep `game.js` small:
-  - `BackgroundManager` — init/draw background, nebulae, starfield, pause overlay
-  - `InputManager` — keyboard, mouse, touch, and focus guards (Esc for pause)
-  - `SpriteManager` — pre-rendered sprites for bullets and yellow/red stars
-  - `UIManager` — DOM updates, overlays, and high score load/persist
-  - `CollisionManager` — bullets/asteroids/player/star collisions and side-effects
-  - `SpawnManager` — spawning and creation of asteroids and stars
-  - `RenderManager` — draw routines for bullets, stars, particles, explosions, asteroids
-  - `ViewManager` — canvas resize and DPR transform
-- `favicon.png` — Site icon
+- `js/` — game logic and modules
+  - `js/constants.js` — tunable settings
+  - `js/game.js` — game loop, state, and orchestration (entry point used by esbuild)
+  - `js/entities/` — entity classes (Player, Asteroid, Bullet, etc.)
+  - `js/managers/` — managers for input, rendering, spawning, UI, collisions, view
+- `server/lambda/` — an example AWS Lambda for leaderboard (optional server-side)
+- `tests/` — Vitest unit tests and edge tests
 
-## Technical notes
+## Types and developer notes
 
-- Canvas-based rendering with gradients and shadows
-- ES modules split logic across `game.js`, `entities/*`, and `managers/*`
-- Mobile tweaks: touch controls and reduced asteroid speed
-- High score is derived from the persisted leaderboard entries (stored under `aiHorizonLeaderboard` in localStorage)
+The project uses JSDoc typedefs (see `js/types.js`) together with TypeScript's checker for stronger editor tooling without converting runtime files to TypeScript.
 
-## Types overview
+Where helpful, modules reference shared typedefs via JSDoc imports (e.g. `import('../types.js').TypeName`).
 
-The project uses JSDoc with TypeScript’s `checkJs` for stronger tooling without converting to TS.
+## Testing and CI
 
-- Shared typedefs live in `js/types.js`:
-  - `ViewSize`, `RNGLike` — common shapes
-  - `SpriteAtlas` — pre-rendered sprites from `SpriteManager.createSprites()`
-  - `SystemsGame`, `CollisionGameSlice` — input “slices” for update/collision systems
-  - `GameEvent` — event names emitted via the event bus
-  - `GameState` — high-level shape of the main game orchestrator
-- Modules reference shared types via `import('../types.js').TypeName` in JSDoc.
-- This keeps runtime vanilla JS while enabling editor intellisense and typechecking.
+- Unit tests: `npm test` (Vitest)
+- Lint: `npm run lint`; CI enforces `npm run lint:ci` (no warnings)
+- Pre-commit hooks: husky + lint-staged are configured in `package.json` to run eslint and prettier on changed files
 
 ## Deploy
 
-This is a static site. You can deploy the source (served from a web server) or the production build in `dist/`:
+This is a static site. Options:
 
-- GitHub Pages: push the repo, enable Pages for the root of the main branch
-- Netlify/Vercel: drag-and-drop the folder or connect the repo
-  - If using the production build, deploy the `dist/` folder and set it as the publish directory
+- GitHub Pages: push the repo and enable Pages for the repository root or deploy the `dist/` folder to your Pages site.
+- Netlify / Vercel: connect the repo, or drag-and-drop the `dist/` folder for static hosting.
 
-— Inspired by classic arcade shooters. Enjoy the flight.
+If you use the production build, point your hosting publish directory to `dist/`.
+
+## Contributing
+
+Contributions are welcome. Run the test suite and linters locally before opening a PR:
+
+- Install deps: `npm install`
+- Format: `npm run format`
+- Lint: `npm run lint` (or `npm run lint:fix`)
+- Test: `npm test`
+
+Please follow existing code style (JSDoc types, small focused modules) and keep changes small and focused.
+
+---
+
+If you'd like, I can also:
+
+- add a tiny example `npm start` script that runs a static server,
+- add a short CONTRIBUTING.md,
+- or run the formatter on the repo now.
+
+Completion: README synchronized with current scripts and tooling.
